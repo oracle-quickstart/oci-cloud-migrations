@@ -1,6 +1,3 @@
-## Copyright (c) 2019-2022 Oracle and/or its affiliates.
-## Licensed under the Universal Permissive License v1.0 as shown at https://oss.oracle.com/licenses/upl.
-
 resource "oci_identity_policy" "HydrationAgentLoggingPolicy" {
   provider       = oci.homeregion
   name           = "HydrationAgentLoggingPolicy"

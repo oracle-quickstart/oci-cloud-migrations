@@ -1,17 +1,19 @@
-## Copyright (c) 2019-2022 Oracle and/or its affiliates.
-## Licensed under the Universal Permissive License v1.0 as shown at https://oss.oracle.com/licenses/upl.
+## Copyright © 2021, Oracle and/or its affiliates. 
+## All rights reserved. The Universal Permissive License (UPL), Version 1.0 as shown at http://oss.oracle.com/licenses/upl
 
 resource "oci_identity_compartment" "Migration" {
   provider       = oci.homeregion
-  name           = var.migration_compartment
+  name           = "Migration"
   description    = "Compartment for OCM resources."
   compartment_id = var.tenancy_ocid
+  enable_delete  = false
 }
 resource "oci_identity_compartment" "MigrationSecrets" {
   provider       = oci.homeregion
-  name           = var.migration_secrets_compartment
+  name           = "MigrationSecrets"
   description    = "Compartment for OCM secrets."
   compartment_id = var.tenancy_ocid
+  enable_delete  = false
 }
 
 resource "oci_identity_dynamic_group" "MigrationDynamicGroup" {

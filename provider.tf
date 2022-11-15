@@ -1,22 +1,19 @@
-## Copyright (c) 2019-2022 Oracle and/or its affiliates.
-## Licensed under the Universal Permissive License v1.0 as shown at https://oss.oracle.com/licenses/upl.
-
 provider "oci" {
-  tenancy_ocid     = var.tenancy_ocid
+  tenancy_ocid = var.tenancy_ocid
   user_ocid        = var.user_ocid
   fingerprint      = var.fingerprint
   private_key_path = var.private_key_path
-  region           = var.region
+  region = var.region
 }
 
 # ## Required for IAM resource creation. IAM resource must be created in the tenancy home region.
 provider "oci" {
-  alias            = "homeregion"
-  tenancy_ocid     = var.tenancy_ocid
+  alias = "homeregion"
+  tenancy_ocid = var.tenancy_ocid
   user_ocid        = var.user_ocid
   fingerprint      = var.fingerprint
   private_key_path = var.private_key_path
-  region           = local.home_region
+  region = local.home_region
 }
 
 locals {

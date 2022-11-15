@@ -1,0 +1,102 @@
+# Migration 
+
+## MigrationDynamicGroup
+All { resource.type = 'ocmmigration', resource.compartment.id = '<migration_compartment_ocid>' }
+
+## MigrationServicePolicy
+Allow dynamic-group MigrationDynamicGroup to manage instance-family in compartment <migration_compartment_name>
+Allow dynamic-group MigrationDynamicGroup to manage compute-image-capability-schema in compartment <migration_compartment_name>
+Allow dynamic-group MigrationDynamicGroup to manage virtual-network-family in compartment <migration_compartment_name>
+Allow dynamic-group MigrationDynamicGroup to manage volume-family in compartment <migration_compartment_name>
+Allow dynamic-group MigrationDynamicGroup to manage object-family in compartment <migration_compartment_name>
+Allow dynamic-group MigrationDynamicGroup to read ocb-inventory in tenancy
+Allow dynamic-group MigrationDynamicGroup to read ocb-inventory-asset in compartment <migration_compartment_name>
+Allow dynamic-group MigrationDynamicGroup to { OCB_CONNECTOR_READ, OCB_CONNECTOR_DATA_READ, OCB_ASSET_SOURCE_READ, OCB_ASSET_SOURCE_CONNECTOR_DATA_UPDATE } in compartment <migration_compartment_name>
+Allow dynamic-group MigrationDynamicGroup to { INSTANCE_IMAGE_INSPECT, INSTANCE_IMAGE_READ } in tenancy
+Allow dynamic-group MigrationDynamicGroup { INSTANCE_INSPECT } in tenancy where any { request.operation='ListShapes' }
+Allow dynamic-group MigrationDynamicGroup { DEDICATED_VM_HOST_READ } in tenancy where any { request.operation='GetDedicatedVmHost' }
+Allow dynamic-group MigrationDynamicGroup { CAPACITY_RESERVATION_READ } in tenancy where any { request.operation='GetComputeCapacityReservation' }
+Allow dynamic-group MigrationDynamicGroup { ORGANIZATIONS_SUBSCRIPTION_INSPECT } in tenancy where any {request.operation='ListSubscriptions' }
+Allow dynamic-group MigrationDynamicGroup to read rate-cards in tenancy
+Allow dynamic-group MigrationDynamicGroup to read metrics in tenancy where target.metrics.namespace='ocb_asset'
+
+# Discovery Service
+
+## DiscoverySerivcePolicy
+Allow service ocb-discovery to inspect compartments in tenancy
+Allow service ocb-discovery to read ocb-environments in compartment <migration_compartment_name>
+Allow service ocb-discovery to read ocb-agents in compartment <migration_compartment_name>
+Allow service ocb-discovery to read ocb-inventory in tenancy
+Allow service ocb-discovery to manage ocb-inventory-asset in compartment <migration_compartment_name>
+Allow service ocb-discovery to { TENANCY_INSPECT } in tenancy
+
+# Remote Agent
+
+## RemoteAgentDynamicGroup
+ALL {resource.type = 'ocbagent'}
+
+## RemoteAgentPolicy
+Allow dynamic-group RemoteAgentDynamicGroup to manage buckets in compartment <migration_compartment_name>
+Allow dynamic-group RemoteAgentDynamicGroup to manage object-family in compartment <migration_compartment_name>
+Allow dynamic-group RemoteAgentDynamicGroup to { OCM_REPLICATION_TASK_READ, OCM_REPLICATION_TASK_UPDATE } in compartment <migration_compartment_name>
+Allow dynamic-group RemoteAgentDynamicGroup to use ocb-asset-source-connectors in compartment <migration_compartment_name>
+Allow dynamic-group RemoteAgentDynamicGroup to use ocb-connectors in compartment <migration_compartment_name>
+Allow dynamic-group RemoteAgentDynamicGroup to manage ocb-inventory in tenancy
+Allow dynamic-group RemoteAgentDynamicGroup to manage ocb-inventory-asset in compartment <migration_compartment_name>
+Allow dynamic-group RemoteAgentDynamicGroup to read secret-family in compartment <migrationsecrets_compartment_name>
+Allow dynamic-group RemoteAgentDynamicGroup to use metrics in compartment <migration_compartment_name> where target.metrics.namespace='ocb_asset'
+Allow dynamic-group RemoteAgentDynamicGroup to { OCM_CONNECTOR_INSPECT, OCM_ASSET_SOURCE_READ, OCM_ASSET_SOURCE_CONNECTION_PUSH } in compartment <migration_compartment_name>
+Allow dynamic-group RemoteAgentDynamicGroup to { OCB_AGENT_INSPECT, OCB_AGENT_SYNC, OCB_AGENT_READ, OCB_AGENT_DEPENDENCY_INSPECT, OCB_AGENT_DEPENDENCY_READ, OCB_AGENT_KEY_UPDATE, OCB_AGENT_TASK_READ, OCB_AGENT_ASSET_SOURCES_INSPECT, OCB_AGENT_TASK_UPDATE } in compartment <migration_compartment_name>
+Allow dynamic-group RemoteAgentDynamicGroup to { OCB_ASSET_SOURCE_INSPECT, OCB_ASSET_SOURCE_READ, OCB_ASSET_SOURCE_ASSET_HANDLES_PUSH, OCB_ASSET_SOURCE_CONNECTION_PUSH } in compartment <migration_compartment_name>
+
+# Discovery Plugin
+
+## DiscoveryPluginDynamicGroup
+ALL {resource.type = 'ocbagent'}
+
+## DiscoveryPluginPolicy
+Allow dynamic-group DiscoveryPluginDynamicGroup to use ocb-connectors in compartment <migration_compartment_name>
+Allow dynamic-group DiscoveryPluginDynamicGroup to use ocb-asset-source-connectors in compartment <migration_compartment_name>
+Allow dynamic-group DiscoveryPluginDynamicGroup to read ocb-inventory in tenancy
+Allow dynamic-group DiscoveryPluginDynamicGroup to manage ocb-inventory-asset in compartment <migration_compartment_name>
+Allow dynamic-group DiscoveryPluginDynamicGroup to read secret-family in compartment <migrationsecrets_compartment_name>
+Allow dynamic-group DiscoveryPluginDynamicGroup to use metrics in compartment <migration_compartment_name> where target.metrics.namespace='ocb_asset'
+
+# Replication Plugin
+
+## ReplicationPluginDynamicGroup
+ALL {resource.type = 'ocbagent'}
+
+## ReplicationPluginPolicy
+Allow dynamic-group ReplicationPluginDynamicGroup to { OCM_REPLICATION_TASK_INSPECT, OCM_REPLICATION_TASK_READ, OCM_REPLICATION_TASK_UPDATE, OCM_CONNECTOR_INSPECT, OCM_ASSET_SOURCE_READ, OCM_ASSET_SOURCE_CONNECTION_PUSH } in compartment <migration_compartment_name>
+Allow dynamic-group ReplicationPluginDynamicGroup to { BUCKET_INSPECT, BUCKET_READ, OBJECTSTORAGE_NAMESPACE_READ, OBJECT_CREATE, OBJECT_DELETE, OBJECT_INSPECT, OBJECT_OVERWRITE, OBJECT_READ } in compartment <migration_compartment_name> where all {target.bucket.name='ocm_replication'}
+Allow dynamic-group ReplicationPluginDynamicGroup to read secret-family in compartment <migrationsecrets_compartment_name>
+Allow dynamic-group ReplicationPluginDynamicGroup to use metrics in compartment <migration_compartment_name> where target.metrics.namespace='ocb_asset'
+Allow dynamic-group ReplicationPluginDynamicGroup to { OCB_AGENT_INSPECT, OCB_AGENT_SYNC, OCB_AGENT_READ, OCB_AGENT_DEPENDENCY_INSPECT, OCB_AGENT_DEPENDENCY_READ, OCB_AGENT_KEY_UPDATE, OCB_AGENT_TASK_READ, OCB_AGENT_ASSET_SOURCES_INSPECT, OCB_AGENT_TASK_UPDATE } in tenancy
+Allow dynamic-group ReplicationPluginDynamicGroup to use ocb-connectors in compartment <migration_compartment_name>
+Allow dynamic-group ReplicationPluginDynamicGroup to use ocb-asset-source-connectors in compartment <migration_compartment_name>
+Allow dynamic-group ReplicationPluginDynamicGroup to read ocb-inventory in tenancy
+Allow dynamic-group ReplicationPluginDynamicGroup to read ocb-inventory-asset in compartment <migration_compartment_name>
+
+# Hydration Agent
+
+## HydrationAgentDynamicGroup
+ALL {instance.compartment.id = '<MIGRATION-OCID>'}
+
+## HydrationAgentPolicy
+Allow dynamic-group HydrationAgentDynamicGroup to { OCM_HYDRATION_AGENT_TASK_INSPECT, OCM_HYDRATION_AGENT_TASK_UPDATE, OCM_HYDRATION_AGENT_REPORT_STATUS } in compartment <migration_compartment_name>
+Allow dynamic-group HydrationAgentDynamicGroup to read objects in compartment <migration_compartment_name>
+
+# Agent Logging
+
+## RemoteAgentLoggingPolicy
+
+### Commercial Realm - OC1
+Define tenancy OCB-SERVICE as ocid1.tenancy.oc1..aaaaaaaahr2xcduf4knzkzhkzt442t66bpqt3aazss6cy2ll6x4xj3ci7tiq,
+Endorse dynamic-group RemoteAgentDynamicGroup to { OBJECT_CREATE } in tenancy OCB-SERVICE"
+
+## HydrationAgentLoggingPolicy
+
+###Commercial Realm - OC1
+Define tenancy OCM-SERVICE AS ocid1.tenancy.oc1..aaaaaaaartv6j5muce2s4djz7rvfn2vwceq3cnue33d72isntnlfmi7huv7q,
+Endorse dynamic-group HydrationAgentDynamicGroup to { OBJECT_CREATE } in tenancy OCM-SERVICE where all { target.bucket.name = '<user_tenancy_ocid>' }

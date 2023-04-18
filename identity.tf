@@ -74,8 +74,9 @@ resource "oci_identity_policy" "MigrationServicePolicy" {
     "Allow dynamic-group ${oci_identity_dynamic_group.MigrationDynamicGroup.name} { CAPACITY_RESERVATION_READ } in tenancy where any { request.operation='GetComputeCapacityReservation' }",
     "Allow dynamic-group ${oci_identity_dynamic_group.MigrationDynamicGroup.name} { ORGANIZATIONS_SUBSCRIPTION_INSPECT } in tenancy where any { request.operation='ListSubscriptions' }",
     "Allow dynamic-group ${oci_identity_dynamic_group.MigrationDynamicGroup.name} to read rate-cards in tenancy",
-    "Allow dynamic-group ${oci_identity_dynamic_group.MigrationDynamicGroup.name} to use metrics in tenancy where target.metrics.namespace='ocb_asset'"
-
+    "Allow dynamic-group ${oci_identity_dynamic_group.MigrationDynamicGroup.name} to use metrics in tenancy where target.metrics.namespace='ocb_asset'",
+    "Allow dynamic-group ${oci_identity_dynamic_group.MigrationDynamicGroup.name} to read tag-namespaces in tenancy",
+    "Allow dynamic-group ${oci_identity_dynamic_group.MigrationDynamicGroup.name} to use tag-namespaces in tenancy where target.tag-namespace.name='CloudMigrations'"
   ]
 }
 
@@ -160,3 +161,37 @@ resource "oci_identity_policy" "HydrationAgentPolicy" {
   ]
 }
 
+resource "oci_identity_tag_namespace" "CloudMigrations" {
+  name           = "CloudMigrations"
+  description    = "Used to track resources created by Oracle Cloud Migrations service."
+  compartment_id = var.tenancy_ocid
+}
+
+resource "oci_identity_tag" "ServiceUse" {
+  name             = "ServiceUse"
+  description      = "Oracle Cloud Migrations serivce"
+  tag_namespace_id = oci_identity_tag_namespace.CloudMigrations.id
+}
+
+resource "oci_identity_tag" "SourceEnvironmentId" {
+  name             = "SourceEnvironmentId"
+  description      = "Source Environment OCID"
+  tag_namespace_id = oci_identity_tag_namespace.CloudMigrations.id
+}
+resource "oci_identity_tag" "SourceEnvironmentType" {
+  name             = "SourceEnvironmentType"
+  description      = "Source Environment Type"
+  tag_namespace_id = oci_identity_tag_namespace.CloudMigrations.id
+}
+
+resource "oci_identity_tag" "SourceAssetId" {
+  name             = "SourceAssetId"
+  description      = "Asset Source OCID"
+  tag_namespace_id = oci_identity_tag_namespace.CloudMigrations.id
+}
+
+resource "oci_identity_tag" "MigrationProject" {
+  name             = "MigrationProject"
+  description      = "Migration Project OCID"
+  tag_namespace_id = oci_identity_tag_namespace.CloudMigrations.id
+}

@@ -169,7 +169,7 @@ resource "oci_identity_tag_namespace" "CloudMigrations" {
 
 resource "oci_identity_tag" "ServiceUse" {
   name             = "ServiceUse"
-  description      = "Oracle Cloud Migrations serivce"
+  description      = "Oracle Cloud Migrations service"
   tag_namespace_id = oci_identity_tag_namespace.CloudMigrations.id
 }
 

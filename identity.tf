@@ -162,35 +162,41 @@ resource "oci_identity_policy" "HydrationAgentPolicy" {
 }
 
 resource "oci_identity_tag_namespace" "CloudMigrations" {
+  provider       = oci.homeregion
   name           = "CloudMigrations"
   description    = "Used to track resources created by Oracle Cloud Migrations service."
   compartment_id = var.tenancy_ocid
 }
 
 resource "oci_identity_tag" "ServiceUse" {
+  provider         = oci.homeregion
   name             = "ServiceUse"
   description      = "Oracle Cloud Migrations service"
   tag_namespace_id = oci_identity_tag_namespace.CloudMigrations.id
 }
 
 resource "oci_identity_tag" "SourceEnvironmentId" {
+  provider         = oci.homeregion
   name             = "SourceEnvironmentId"
   description      = "Source Environment OCID"
   tag_namespace_id = oci_identity_tag_namespace.CloudMigrations.id
 }
 resource "oci_identity_tag" "SourceEnvironmentType" {
+  provider         = oci.homeregion
   name             = "SourceEnvironmentType"
   description      = "Source Environment Type"
   tag_namespace_id = oci_identity_tag_namespace.CloudMigrations.id
 }
 
 resource "oci_identity_tag" "SourceAssetId" {
+  provider         = oci.homeregion
   name             = "SourceAssetId"
   description      = "Asset Source OCID"
   tag_namespace_id = oci_identity_tag_namespace.CloudMigrations.id
 }
 
 resource "oci_identity_tag" "MigrationProject" {
+  provider         = oci.homeregion
   name             = "MigrationProject"
   description      = "Migration Project OCID"
   tag_namespace_id = oci_identity_tag_namespace.CloudMigrations.id

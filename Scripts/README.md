@@ -7,4 +7,4 @@ These are example scripts that support the [Oracle Cloud Migrations](https://doc
 |[boot_order.py](Troubleshooting/boot_order/README.md)| Modifies the boot order of disks for a VMware VM Asset.|CloudShell|27 Mar 2024|
 |[cleanup_volumes.py](Cleanup/cleanup_volumes/README.md)|Terminates unattached volumes.|CloudShell|27 Mar 2024|
 |[migration_project_rename_aws_asset.py](Migration/migration_project_rename_aws_asset/README.md)|Renames AWS EC2 Migration Assets based on AWS tag name.|CloudShell|27 Mar 2024|
-|[SetupWorkloads.ps1](TrainingLab/SetupWorkloads/REAMDME.md)|Helpful scripts for setting up a training lab.|PowerShell|27 Mar 2024|
+|[SetupWorkloads.ps1](TrainingLab/SetupWorkloads/README.md)|Helpful scripts for setting up a training lab.|PowerShell|27 Mar 2024|

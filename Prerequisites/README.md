@@ -1,0 +1,2 @@
+# Overview
+This directory contains a copy of the Terraform provided by the Oracle Cloud Migrations service to staisfy the required [prerequisites](https://docs.oracle.com/en-us/iaas/Content/cloud-migration/cloud-migration-get-started.htm#cloud-migration-prerequisites-ocm). See the [Deploy Required Migration Prerequisites](https://docs.oracle.com/en-us/iaas/Content/cloud-migration/cloud-migration-deploy-overview.htm) documenatation for more details.

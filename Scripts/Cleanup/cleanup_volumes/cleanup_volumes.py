@@ -111,6 +111,7 @@ for boot_volume in boot_volumes:
 	if boot_volume.lifecycle_state != "AVAILABLE":
 		continue
 	if (not boot_volume.display_name.startswith(("G_","vanilla","Hydration"))) and (boot_volume.id not in attached_boot_volumes):
+		found_unattached_boot = True
 		migration_asset = cloud_migrations_client.get_migration_asset(migration_asset_id=boot_volume.freeform_tags["migrationAssetId"]).data
 		print("Delete unattached boot volume ("+ boot_volume.display_name + ") for " + migration_asset.display_name + "?")
 		if confirm().lower() == 'y':
@@ -122,6 +123,7 @@ if not found_unattached_boot:
 found_unattached_data = False
 for data_volume in data_volumes:
 	if (not data_volume.display_name.startswith(("G_","vanilla","Hydration"))) and (data_volume.id not in attached_data_volumes):
+		found_unattached_data = True
 		migration_asset = cloud_migrations_client.get_migration_asset(migration_asset_id=data_volume.freeform_tags["migrationAssetId"]).data
 		print("Delete unattached data volume ("+ data_volume.display_name + ") for " + migration_asset.display_name + "?")
 		if confirm().lower() == 'y':

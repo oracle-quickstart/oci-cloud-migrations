@@ -17,7 +17,7 @@ Scanning compartment ocb-user\CompA\CompAC
 Scanning compartment ManagedCompartment
         Unable to list migration projects. Status: 404, code: NotAuthorizedOrNotFound, message: Authorization failed or requested resource not found.
 Scanning compartment ocb-user
-        Migration: egolenko-project
+        Migration: test-project
 Found compartment: ocb-user, migration project: ocid1.ocmmigration.oc1.iad.amaaaaaabkvoaqqa6r46imxqtwplyoj4ulkgdu3nmmic5pyqiirslv44e2eq, state: ACTIVE, migration asset:ocid1.ocmmigrationasset.oc1.iad.amaaaaaa556ckoia5bjs5tw26ty2pxeoen4jqvgammkmldocuuhopqf3ytza, state: ACTIVE
         Migration: migration_2023-0511-1447
 Scanning compartment vSphere-compartment

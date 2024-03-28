@@ -1,8 +1,12 @@
 # boot_order.py
 
+## Overview
 A simple script, which displays content of the `compute.disks` object of a source asset and adjusts boot order to point onto a specific disk for the target asset to boot from. Takes optional parameter -b/--boot-order with the index of the index of the disk (starting from 0) in `compute.disks` object to boot from. Readied for execution from the Cloud Shell.
 
-Usage:
+## Supported Environments
+- CloudShell
+
+## Usage
 ```
 
 ansokolo@cloudshell:~ (us-ashburn-1)$ python ./boot_order.py

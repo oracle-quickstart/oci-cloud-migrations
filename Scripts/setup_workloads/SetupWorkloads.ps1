@@ -53,7 +53,7 @@ function Create-Lab-VMs {
         [array]$vms,
         [array]$users,
         [string]$workloadFolder,
-        [string]$esxihostfqnd,
+        [string]$esxihostfqdn,
         [string]$datastore
     )
 
@@ -61,15 +61,16 @@ function Create-Lab-VMs {
 
         New-Folder -Name "$user" -Location $workloadFolder
         $Folder = Get-Folder "$user"
-        $vmHost = Get-VMHost $esxihostfqnd
+        $vmHost = Get-VMHost $esxihostfqdn
         $dataStore = Get-Datastore $datastore
 
         foreach ($vm in $vms){
             $templateName = $vm + "_template"
             $Template = Get-Template -Name $templateName
             $workloadVM = $vm + "_" + $user
+            $portGroup = Get-VDPortgroup $networkName
 
-            New-VM -Name $workloadVM -Template $Template -VMHost $vmHost -Datastore $dataStore -Location $Folder -RunAsync
+            New-VM -Name $workloadVM -Template $Template -VMHost $vmHost -Datastore $dataStore -Location $Folder -RunAsync -Portgroup $portGroup
         }
     }
 <#

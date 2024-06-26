@@ -29,7 +29,7 @@ JSON
 Save the input parameters in a JSON file (e.g., input_params.json).
 Execute the script with the following command:
 ```sh
-python ocm_post_migration.py --input_json_file input_params.json
+python rename_move_volumes.py --input_json_file input_params.json
 
 ```
 

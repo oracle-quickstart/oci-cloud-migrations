@@ -56,16 +56,21 @@ search_resources_response = resource_search_client.search_resources(
         query="query instance resources"),
     tenant_id=config["tenancy"]).data.items
 
+if DEBUG:
+	print("Found " + str(len(search_resources_response)) + " compute instances.")
+
 # Build a unique list of compute compartments.
+
 for result in search_resources_response:
 	compute_compartments.add(result.compartment_id)
-
 # Collect compartment details for compute compartments.
 # Not necessary but used to print compartment name.
+if DEBUG:
+	print("Found " + str(len(compute_compartments)) + " compute compartmens.")
 for compute_compartment in compute_compartments:
 	all_compartments.append(identity_client.get_compartment(compartment_id=compute_compartment).data)
 
-print("Found " + str(len(all_compartments)) + " compute compartments.")
+print("Captured details for " + str(len(all_compartments)) + " compute compartments.")
 
 ## Find Volume Attachments ##
 boot_volume_attachments = []

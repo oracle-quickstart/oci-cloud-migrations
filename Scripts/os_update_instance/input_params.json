@@ -1,0 +1,7 @@
+{
+  "instance_id": "ocid1.instance.XXXXX",
+  "bucket_name": "<Object Storage Bucket Name>",
+  "operating_system_version": "<Windows OS version e.g. Server 2022 Standard>",
+  "config_file": "<OCI Config File e.g. ~/.oci/config>",
+  "config_profile": "<OCI Config Profile name e.g. DEFAULT>"
+}

@@ -4,7 +4,8 @@
 This script identifies and prompts to terminate unattached boot and data volumes related to a migration.
 
 ## Supported Environments
-- CloudShell
+- OCI CloudShell
+- OCI CLI Config File (Key and Delgation Token)
 
 ## Usage
 

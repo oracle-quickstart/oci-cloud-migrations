@@ -1,14 +1,20 @@
-## Copyright (c) 2019-2022 Oracle and/or its affiliates.
-## Licensed under the Universal Permissive License v1.0 as shown at https://oss.oracle.com/licenses/upl.
-
 data "oci_identity_tenancy" "tenancy" {
   tenancy_id = var.tenancy_ocid
+}
+
+data "oci_identity_compartment" "compartment" {
+  id = var.compartment_ocid
 }
 
 data "oci_identity_regions" "regions" {
 }
 
-data "oci_objectstorage_namespace" "objectstorage_namespace" {
+data "oci_objectstorage_namespace" "tenancy_namespace" {
+  compartment_id = var.tenancy_ocid
+}
+
+data "oci_identity_availability_domains" "availability_domains" {
+  compartment_id = var.tenancy_ocid
 }
 
 data "oci_identity_region_subscriptions" "region_subscriptions" {

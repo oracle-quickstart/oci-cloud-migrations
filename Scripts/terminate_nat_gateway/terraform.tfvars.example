@@ -1,0 +1,19 @@
+# OCI Tenancy
+tenancy_ocid     = ""
+user_ocid        = ""
+fingerprint      = ""
+private_key_path = ""
+
+# Region
+region = "us-ashburn-1"
+
+# Compartment
+compartment_ocid = ""
+
+# Subnet
+subnet_ocid = ""
+
+# OCI Image Repository Credentials
+ocir_user_name   = ""
+ocir_password    = ""
+

@@ -1,0 +1,5 @@
+{
+  "instance_id": "ocid1.instance.XXXXX",
+  "config_file": "<OCI Config File e.g. ~/.oci/config>",
+  "config_profile": "<OCI Config Profile name e.g. DEFAULT>"
+}

@@ -1,0 +1,35 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+                "ebs:ListChangedBlocks",
+                "ebs:ListSnapshotBlocks",
+                "ebs:GetSnapshotBlock"
+            ],
+            "Resource": "arn:aws:ec2:*::snapshot/*"
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "ec2:CreateSnapshots",
+                "ec2:CreateTags"
+            ],
+            "Resource": [
+                "arn:aws:ec2:*:<<ACCOUND_ID>>:instance/*",
+                "arn:aws:ec2:*:<<ACCOUND_ID>>:volume/*",
+                "arn:aws:ec2:*::snapshot/*"
+            ]
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "ec2:DescribeInstances",
+                "ec2:DescribeVolumes",
+                "ec2:DescribeSnapshots"
+            ],
+            "Resource": "*"
+        }
+    ]
+}

@@ -6,9 +6,23 @@ data "oci_identity_compartment" "customer_compartment" {
   id = var.compartment_ocid
 }
 
+data "oci_identity_compartments" "existing_migration_compartment" {
+  compartment_id = var.compartment_ocid
+  access_level   = "ANY"
+  name           = "Migration"
+  state          = "ACTIVE"
+}
+
+data "oci_identity_compartments" "existing_migration_secrets_compartment" {
+  compartment_id = var.compartment_ocid
+  access_level   = "ANY"
+  name           = "MigrationSecrets"
+  state          = "ACTIVE"
+}
+
 locals {
   # Prefix that will be used to create all resources outside of this two compartments (Migration and MigrationSecrets)
-  version_value               = "1.0"
+  version_value               = "2.0"
   prefix                      = lower(data.oci_identity_compartment.customer_compartment.name)
   ocm_migration_tag_namespace = "CloudMigrations"
   version_tag                 = "PrerequisiteVersion"
@@ -19,20 +33,19 @@ locals {
   migration_project_tag       = "MigrationProject"
   service_use_tag             = "ServiceUse"
   vmware_use_case_tag         = "PrerequisiteForVMware"
-  cld_use_case_tag            = "PrerequisiteForCLD"
+  aws_use_case_tag            = "PrerequisiteForAWS"
   resource_level_values = [
     "tenancy",
     "compartment"
   ]
-  migration_from_vmware      = true
   use_case_enabled_tag_value = "true"
-  ocb_discovery_service = "ocb-discovery"
-  any_migration              = local.migration_from_vmware
+  primary_prerequisite_stack   = var.primary_prerequisite_stack
+  any_migration              = var.migration_from_vmware || var.migration_from_aws
   vmware_defined_tags = {
     "${local.ocm_migration_tag_namespace}.${local.vmware_use_case_tag}" = local.use_case_enabled_tag_value
   }
-  cld_defined_tags = {
-    "${local.ocm_migration_tag_namespace}.${local.cld_use_case_tag}" = local.use_case_enabled_tag_value
+  aws_defined_tags = {
+    "${local.ocm_migration_tag_namespace}.${local.aws_use_case_tag}" = local.use_case_enabled_tag_value
   }
 
 }

@@ -1,0 +1,110 @@
+title: Oracle Cloud Migrations Onboarding
+description: Deploy the resources required for the Oracle Cloud Migration service to function properly.
+schemaVersion: 1.1.0
+version: "20190304"
+variableGroups:
+  - title: "Migration Root Location"
+    variables:
+      - ${compartment_ocid}
+  - title: "Global Resources"
+    variables:
+      - ${primary_prerequisite_stack}
+  - title: "Enabled Migrations"
+    visible: primary_prerequisite_stack
+    variables:
+      - ${migration_from_vmware}
+      - ${migration_from_aws}
+  - title: "Replication Location"
+    variables:
+      - ${replication_bucket}
+      - ${create_replication_bucket}
+  - title: "Optional Resources"
+    visible: primary_prerequisite_stack
+    variables: 
+      - ${migration_groups}
+      - ${remote_agent_logging}
+      - ${hydration_agent_logging}
+  - tile: "Remote Agent Appliance Logging"
+    visible: 
+      and: 
+        - remote_agent_logging
+        - primary_prerequisite_stack
+    variables:
+      - ${ocb-service-tenancy-ocid}
+  - tile: "Hydration Agent Logging"
+    visible: 
+      and:
+        - hydration_agent_logging
+        - primary_prerequisite_stack
+    variables:
+      - ${ocm-service-tenancy-ocid}
+  - title: "Hidden"
+    visible: false
+    variables: 
+      - ${tenancy_ocid}
+      - ${create_cloud_migrations_tag_namespace_and_tag_definitions}
+variables:
+  compartment_ocid:
+    type: oci:identity:compartment:id
+    description: "The parent compartment where the working compartments (Migration and MigrationSecrets) will be created."
+    title: "Migration Root Compartment"
+    required: true
+  create_replication_bucket:
+    type: boolean
+    description: "Create a new Object Storage bucket used for data replication."
+    title: "Create a new replication bucket?"
+    required: true
+    default: true
+  replication_bucket:
+    type: string
+    description: "Name of an existing bucket or name of the replication bucket to be created."
+    title: "Replication Bucket Name"
+    required: false
+  primary_prerequisite_stack:
+    type: boolean
+    description: "Uncheck if working compartments, tag namespace, and serivce policies have already been deployed."
+    title: "Primary Prerequisite Stack"
+    required: true
+    default: true
+  migration_from_aws:
+    type: boolean
+    description: "Create service policies needed for AWS EC2 migrations."
+    title: "AWS EC2 Migrations"
+    required: true
+    default: false
+  migration_from_vmware:
+    type: boolean
+    description: "Create service policies needed for VMware VM migrations."
+    title: "VMware VM Migrations"
+    required: true
+    default: false
+  migration_groups:
+    type: boolean
+    description: "Create base policies for migration administrators and migration operators."
+    title: "Migration Service User Groups"
+    required: false
+    default: false
+  remote_agent_logging:
+    type: boolean
+    description: "Create service policies allowing Remote Agent Appliances upload logs."
+    title: "Enable Remote Agent Apppliance logging"
+    required: false
+    default: false
+  ocb-service-tenancy-ocid:
+    type: string
+    description: "Realm OCID of the Oracle Cloud Bridge service tenancy."
+    title: "Oracle Cloud Bridge service tenancy"
+    required: true
+    default: "ocid1.tenancy.oc1..aaaaaaaahr2xcduf4knzkzhkzt442t66bpqt3aazss6cy2ll6x4xj3ci7tiq"
+  hydration_agent_logging:
+    type: boolean
+    description: "Create service policies allowing Hydration Agents to upload logs."
+    title: "Enable Hydration Agent logging"
+    required: false
+    default: false
+  ocm-service-tenancy-ocid:
+    type: string
+    description: "Realm OCID of the Oracle Cloud Migrations service tenancy."
+    title: "Oracle Cloud Migrations service tenancy"
+    required: true
+    default: "ocid1.tenancy.oc1..aaaaaaaartv6j5muce2s4djz7rvfn2vwceq3cnue33d72isntnlfmi7huv7q"

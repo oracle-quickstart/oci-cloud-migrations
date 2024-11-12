@@ -72,6 +72,11 @@ the attribute can be anything, but the value must start with **OCI:** and then f
 
 <img src=vcenter_example.png width="400">
 
+## Validation
+When the script runs, if will check if an assigned/mapped IP address is found and if this IP Address is part of the CIDR
+range of the target Subnet in OCI. It will also check if there is no conflict with the default gateway in that subnet or with any 
+current running services that are using this subnet.
+
 
 # License
 

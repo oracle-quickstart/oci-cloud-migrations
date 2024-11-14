@@ -202,7 +202,7 @@ def processTarget(region, targetID, cmd, signer):
                     if ipaddress.ip_address(MappedIP) in ipaddress.ip_network(subnetDetails.cidr_block):
                         pass
                     else:
-                        print (" - Mapped IP [{}] does not match target subnet [{}]".format(mapip,subnetDetails.cidr_block))
+                        print (" - Mapped IP [{}] does not match target subnet [{}]".format(MappedIP,subnetDetails.cidr_block))
                         conflict = True
 
                 # Check IP address does not conflict with default gateway of the subnet

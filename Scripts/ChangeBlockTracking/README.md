@@ -1,6 +1,6 @@
 # ChangeBlockTracking
 Script to get or set Change Block Tracking on VMware VMs
-Created by Richard Garsthagen - February 22th 2024
+Created by Richard Garsthagen - December 2024
 
 This script is created to help with the setup of your VMs when using the
 Oracle Cloud Migration Service. If you want your VMs to be replicated with only 

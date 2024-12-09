@@ -1,0 +1,4 @@
+[vCenter]
+host = your_vcenter_server
+user = your_username
+password = your_password

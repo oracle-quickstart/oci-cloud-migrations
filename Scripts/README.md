@@ -11,3 +11,4 @@ These are example scripts that support the [Oracle Cloud Migrations](https://doc
 |[terminate_nat_gateway](terminate_nat_gateway/README.md)|Workaround for the default Hydration Agent virtual network created by the Oracle Cloud Migrations service.|Resource Manager|12 Jun 2024|
 |[SetupWorkloads.ps1](setup_workloads/README.md)|Helpful scripts for setting up a training lab.|PowerShell|18 Apr 2024|
 |[SetIP.py](SetIP/README.md)|Manage the private IP address of the target Assets in a migration plan|Python|11 Nov 2024|
+|[cbt.py](ChangeBlockTracking/README.md)|Check and configure Change Block Tracking for multiple VMs in vCenter|Python|9 December 2024|

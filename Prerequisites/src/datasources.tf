@@ -22,7 +22,7 @@ data "oci_identity_compartments" "existing_migration_secrets_compartment" {
 
 locals {
   # Prefix that will be used to create all resources outside of this two compartments (Migration and MigrationSecrets)
-  version_value               = "2.0"
+  version_value               = "2.1"
   prefix                      = lower(data.oci_identity_compartment.customer_compartment.name)
   ocm_migration_tag_namespace = "CloudMigrations"
   version_tag                 = "PrerequisiteVersion"
@@ -39,7 +39,7 @@ locals {
     "compartment"
   ]
   use_case_enabled_tag_value = "true"
-  primary_prerequisite_stack   = var.primary_prerequisite_stack
+  primary_prerequisite_stack = var.primary_prerequisite_stack
   any_migration              = var.migration_from_vmware || var.migration_from_aws
   vmware_defined_tags = {
     "${local.ocm_migration_tag_namespace}.${local.vmware_use_case_tag}" = local.use_case_enabled_tag_value

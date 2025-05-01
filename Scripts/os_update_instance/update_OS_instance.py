@@ -680,14 +680,14 @@ def main():
             perform_get_attached_volumes(compute_client, instance_details, compartment_id)
           
             # Backup Boot Volume
-            print(section_separator())
-            print("Performing boot volume backup and wait for the task to complete")
-            create_boot_volume_backup(blockstorage_client, instance_details)
+            #print(section_separator())
+            #print("Performing boot volume backup and wait for the task to complete")
+            #create_boot_volume_backup(blockstorage_client, instance_details)
 
             # Backup Block Volume 
-            print(section_separator())
-            print("Performing attached block volume backup and wait for the task to complete")
-            create_block_volume_backup(blockstorage_client, instance_details)
+            #print(section_separator())
+            #print("Performing attached block volume backup and wait for the task to complete")
+            #create_block_volume_backup(blockstorage_client, instance_details)
            
             # Save instance_details to a JSON file
             print(section_separator())

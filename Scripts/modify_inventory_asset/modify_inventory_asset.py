@@ -69,6 +69,7 @@ def ChangeFirmware (new_firmware):
 
 def MungeAWSAssetTimestamps ():
     ## Discovery timestamp format is not compatible with AssetUpdate format.
+    print("Modifying AWS Timestamps.")
     asset.aws_ec2.time_launch = asset.time_created
     for index, network_interface in enumerate(asset.aws_ec2.network_interfaces):
         asset.aws_ec2.network_interfaces[index].attachment.time_attach = asset.time_created
@@ -154,7 +155,7 @@ if (__name__ == '__main__'):
     ## Update Inventory Asset
     if original_asset != asset:
         if asset.asset_type == "AWS_EC2":
-            MungeAWSAssetTimestamps
+            MungeAWSAssetTimestamps()
 
         UpdateInventoryAsset(config, signer)
 

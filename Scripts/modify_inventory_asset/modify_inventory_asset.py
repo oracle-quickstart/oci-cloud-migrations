@@ -47,7 +47,7 @@ def ExcludeDisk (disk_number):
             return
     
     print("Excluding disk.")
-    asset.compute.disk.pop(disk_number)
+    asset.compute.disks.pop(disk_number)
 
 def ChangeBootDisk (disk_number):
     if len(asset.compute.disks) <= disk_number:

@@ -1,0 +1,14 @@
+{
+    "tenant_id": "",
+    "mig_cmpt": "",
+    "mig_secret_cmpt": "",
+    "env_id": "",
+    "olvm_discovery_secret": "",
+    "olvm_replication_secret": "",
+    "olvm_endpoint": "",
+    "migration_id": "",
+    "migration_plan_id": "",
+    "cluster_id": "",
+    "vnic_profile_id": "",
+    "template_id": ""
+}

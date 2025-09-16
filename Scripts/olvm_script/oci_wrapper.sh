@@ -45,6 +45,19 @@ if [[ ! -f "$CONFIG_FILE" ]]; then
   exit 1
 fi
 
+# Dynamically select a random Availability Domain and Object Storage bucket
+get_random_availability_domain() {
+  # Retrieve all AD names within the tenancy and pick one at random
+  oci iam availability-domain list --compartment-id "$tenant_id" $auth 2>/dev/null \
+    | jq -r '.data[].name' | sort -R | head -n 1
+}
+
+get_random_bucket() {
+  # Retrieve all bucket names in the migration compartment and pick one at random
+  oci os bucket list --compartment-id "$mig_cmpt" $auth 2>/dev/null \
+    | jq -r '.data[].name' | sort -R | head -n 1
+}
+
 # Initialize config.json variables
 tenant_id=$(jq -r '.tenant_id'            "$CONFIG_FILE")
 mig_cmpt=$(jq -r '.mig_cmpt'              "$CONFIG_FILE")
@@ -66,10 +79,8 @@ cluster_id=$(jq -r '.cluster_id'           "$CONFIG_FILE")
 vnic_profile_id=$(jq -r '.vnic_profile_id' "$CONFIG_FILE")
 template_id=$(jq -r '.template_id'         "$CONFIG_FILE")
 
-# Dummy vars. TODO: Replace with lookup
-vol_AD="gfwo:PHX-AD-1"
-snapshot_bucket="ocmlab06"
-
+vol_AD="$(get_random_availability_domain)"
+snapshot_bucket="$(get_random_bucket)"
 
 # Preserve script name; in zsh the FUNCTION_ARGZERO option can cause `$0`
 # inside a function to expand to the function's name (“usage”).  Capture the

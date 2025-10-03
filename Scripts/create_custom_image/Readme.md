@@ -52,7 +52,7 @@ options:
   --os_version {Server 2022 standard,Server 2022 datacenter,Server 2019 standard,Server 2019 datacenter,Server 2016 datacenter,Server 2016 standard,Server 2012 r2 datacenter,Server 2012 r2 standard,Server 2012 datacenter,Server 2012 standard,Server 2008 r2 datacenter,Server 2008 r2 enterprise,Server 2008 r2 standard}
                         Windows OS version for the custom image.
   --firmware {UEFI_64,BIOS}
-                        Firmware type for the custom image (default: UEFI_64).
+                        Firmware type for the custom image.
   --bucket_name BUCKET_NAME
                         Bucket Name used while creating custom zero byte custom image.
   --skip_check_custom_image

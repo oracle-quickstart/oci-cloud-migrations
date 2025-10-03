@@ -288,7 +288,7 @@ def parse_arguments():
     parser.add_argument('--os_version', default='Server 2022 standard', choices=windows_os_versions,
                         help='Windows OS version for the custom image.')
     parser.add_argument('--firmware', required=True, choices=firmware_choices,
-                        help='Firmware type for the custom image (default: UEFI_64).')
+                        help='Firmware type for the custom image.')
     parser.add_argument('--bucket_name', required=True,
                         help='Bucket Name used while creating custom zero byte custom image.')
     parser.add_argument('--skip_check_custom_image', action='store_true',

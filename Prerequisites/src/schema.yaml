@@ -24,14 +24,14 @@ variableGroups:
       - ${migration_groups}
       - ${remote_agent_logging}
       - ${hydration_agent_logging}
-  - tile: "Remote Agent Appliance Logging"
+  - title: "Remote Agent Appliance Logging"
     visible: 
       and: 
         - remote_agent_logging
         - primary_prerequisite_stack
     variables:
       - ${ocb-service-tenancy-ocid}
-  - tile: "Hydration Agent Logging"
+  - title: "Hydration Agent Logging"
     visible: 
       and:
         - hydration_agent_logging
@@ -62,7 +62,7 @@ variables:
     required: false
   primary_prerequisite_stack:
     type: boolean
-    description: "Uncheck if working compartments, tag namespace, and serivce policies have already been deployed."
+    description: "Uncheck if working compartments, tag namespace, and service policies have already been deployed."
     title: "Primary Prerequisite Stack"
     required: true
     default: true
@@ -87,7 +87,7 @@ variables:
   remote_agent_logging:
     type: boolean
     description: "Create service policies allowing Remote Agent Appliances upload logs."
-    title: "Enable Remote Agent Apppliance logging"
+    title: "Enable Remote Agent Appliance Logging (VMware only)"
     required: false
     default: false
   ocb-service-tenancy-ocid:

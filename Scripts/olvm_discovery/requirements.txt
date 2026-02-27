@@ -1,0 +1,2 @@
+oci
+ovirt-engine-sdk-python

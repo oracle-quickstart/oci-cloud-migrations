@@ -3,11 +3,15 @@ from requests.exceptions import RequestException
 import tempfile, os, sys
 import ovirtsdk4 as sdk
 from datetime import datetime, timezone
+from oci.exceptions import ServiceError
 
 
-def auth(profile_name = 'DEFAULT', region = False):
+def eprint(*args):
+    print(*args, file=sys.stderr)
+
+def auth(profile_name = 'DEFAULT', region = False, location='~/.oci/config'):
     try:
-        config = oci.config.from_file(profile_name=profile_name)
+        config = oci.config.from_file(profile_name=profile_name,file_location=location)
     except oci.exceptions.ProfileNotFound:
         eprint(f'Profile {profile_name} is not found. Authenticate via `oci session authenticate --region=us-phoenix-1 --profile={profile_name}`')
         exit(1)
@@ -17,13 +21,33 @@ def auth(profile_name = 'DEFAULT', region = False):
             config['region'] = oci.regions.get_region_from_short_name(region)
         else:
             config['region'] = region
-    private_key = oci.signer.load_private_key_from_file(config['key_file'])
-    token_file = config['security_token_file']
-    token = None
-    with open(token_file, 'r') as f:
-        token = f.read()
-    signer = oci.auth.signers.SecurityTokenSigner(token, private_key)
+
+    if 'security_token_file' in config.keys():
+        private_key = oci.signer.load_private_key_from_file(config['key_file'])
+        token_file = config['security_token_file']
+        token = None
+        with open(token_file, 'r') as f:
+            token = f.read()
+        signer = oci.auth.signers.SecurityTokenSigner(token, private_key)
+    else:
+        signer = oci.signer.Signer(
+            tenancy=config["tenancy"],
+            user=config["user"],
+            fingerprint=config["fingerprint"],
+            private_key_file_location=config["key_file"],
+            pass_phrase=config.get("pass_phrase")
+        )
     return (config, signer)
+
+def check_auth(config,signer):
+    identity = oci.identity.IdentityClient(config={'region': config['region']},signer=signer)
+    try:
+        resp = identity.get_tenancy(config["tenancy"])
+        return True
+    except ServiceError as e:
+        eprint(f'Unable to authenticate. Status: {e.status} Code: {e.code} Message: {e.message}')
+        sys.exit(1)
+    return True
 
 def parse_ocid(ocid):
     pattern = r'^ocid1\.([a-z0-9]+)\.([a-z0-9]+)*\.([a-z0-9\-]+)\.[a-z0-9]{60}'
@@ -81,26 +105,59 @@ def format_vm_template_asset(at, obj):
     }
     return format_asset(at, obj)
 
+def get_inventory_assets(config, signer, compartment_id, inventory_id, page=None):
+    url = f'https://cloudbridge.{config["region"]}.oci.oraclecloud.com/20220509/assets/'
+    params = {'compartmentId': compartment_id, 'inventoryId': inventory_id, 'lifecycleState': 'ACTIVE', 'inventoryId': inventory_id}
+    if page:
+        params['page'] = page
+    try:
+        r = requests.get(url, params=params, auth=signer)
+        r.raise_for_status()
+    except RequestException as err:
+        if r.status_code >= 300:
+            eprint(f'Error occured while retrieving list of assets: {err}')
+            return assets
+    
+    assets = r.json()['items']
+    next_page = r.headers.get('opc-next-page')
+    if next_page:
+        print('.', end='', flush=True)
+        return assets + get_inventory_assets(config, signer, compartment_id, inventory_id, page=next_page)
+    return assets
+    
+def get_uniq_assets(assets):
+    uniq_assets = {}
+    for asset in assets:
+        uniq_assets[(asset['inventoryId'], asset['externalAssetKey'], asset['sourceKey'])] = asset['id']
+    return uniq_assets
+
+
 def create_asset(payload, config, signer):
-    print(f'\tOLVM object {payload['displayName']} .. ', end='')
-    #if payload['displayName'] != 'ovirtmgmt':
-    #    print('')
-    #    return
+    #uses global dictionary uniq_assets, is not modifying it
+    print(f"\tOLVM object {payload['displayName']} .. ", end='')
+    if (payload['inventoryId'], payload['externalAssetKey'], payload['sourceKey']) in uniq_assets.keys():
+        print(f'Found {uniq_assets[(payload['inventoryId'], payload['externalAssetKey'], payload['sourceKey'])]}')
+        return
     url = f'https://cloudbridge.{config["region"]}.oci.oraclecloud.com/20220509/assets/'
     try:
         r = requests.post(url, json=payload, auth=signer)
         r.raise_for_status()
     except RequestException as err:
-        print(f'Error occured while injecting to OCM inventory: {err}')
+        eprint(f'Error occured while registering in OCM inventory: {err}')
         return
-    print(f'OCM inventory asset {r.json()['id']}')
-   
+    print(f"New asset {r.json()['id']}")
+  
 
 if __name__ == '__main__':
+    if (len(sys.argv) < 2):
+        eprint('Asset source id must be provided as a parameter!')
+        sys.exit(1)
 
     asset_source_id = sys.argv[1]
     region = parse_ocid(asset_source_id)['region']
-    config, signer = auth(profile_name = 'DEFAULT',region = region)
+    config, signer = auth(region=region, profile_name = 'DEFAULT')
+    check_auth(config, signer)
+    
     #cloud_bridge_client = oci.cloud_bridge.DiscoveryClient(config, signer=signer)
     url = f'https://cloudbridge.{config["region"]}.oci.oraclecloud.com/20220509/assetSources/{asset_source_id}'
     asset_source = requests.get(url, auth=signer).json()
@@ -109,6 +166,9 @@ if __name__ == '__main__':
     inventory_id = asset_source['inventoryId']
     secret_id = asset_source['discoveryCredentials']['secretId']
     compartment_id = asset_source['assetsCompartmentId']
+    print('Pulling inventory assets ', end='')
+    uniq_assets = get_uniq_assets(get_inventory_assets(config, signer, compartment_id, inventory_id))
+    print(f' Done!')
     # Asset Template - at
     at = {
         'assetSourceIds': [asset_source_id],
@@ -135,24 +195,27 @@ if __name__ == '__main__':
 
     olvm_conn = sdk.Connection(url=olvm_endpoint, username=olvm_secret['username'], password=olvm_secret['password'], ca_file=tf.name)
     storage_domains=olvm_conn.system_service().storage_domains_service().list()
-    print(f'Pulled {len(storage_domains)} storage domains ..  ')
+    print(f'Pulled {len(storage_domains)} storage domains')
     for domain in storage_domains:
         create_asset(format_storage_domain_asset(at, domain), config, signer)
 
     clusters = olvm_conn.system_service().clusters_service().list()
-    print(f'Pulled {len(clusters)} clusters ..  ')
+    print(f'Pulled {len(clusters)} clusters')
     for cluster in clusters:
         create_asset(format_cluster_asset(at, cluster), config, signer)
     
     vnic_profiles = olvm_conn.system_service().vnic_profiles_service().list()
-    print(f'Pulled {len(vnic_profiles)} vNIC profiles ..  ')
+    print(f'Pulled {len(vnic_profiles)} vNIC profiles')
     for vnic_profile in vnic_profiles:
         create_asset(format_vnic_profile_asset(at, vnic_profile), config, signer)
 
     vm_templates = olvm_conn.system_service().templates_service().list()
-    print(f'Pulled {len(vm_templates)} VM templates ..  ')
+    print(f'Pulled {len(vm_templates)} VM templates')
     for vm_template in vm_templates:
         create_asset(format_vm_template_asset(at, vm_template), config, signer)
 
     olvm_conn.close()
     os.unlink(tf.name)
+
+# Analyzing olvm_discovery.py error handling needs
+# opencode -s ses_3ad01e8f1ffejeGBSQYv0LB1v0

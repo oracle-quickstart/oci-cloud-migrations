@@ -1,7 +1,7 @@
 # olvm_discovery.py
 
 ## Overview
-Standalone script, which performs discovery of OLVM resources and saves them as OCM inventory assets to enable VMware > OLVM migration using Oracle Cloud Migrations service.
+Standalone script, which performs discovery of OLVM resources and saves them as OCM inventory assets to enable VMware > OLVM migration using Oracle Cloud Migrations service. It takes OCID of the OLVM asset source and pulls OLVM endpoint URL and credentials from its configuration.
 
 ## Supported Auhtentication
 - Security token

@@ -136,7 +136,7 @@ def create_asset(payload, config, signer):
     #uses global dictionary uniq_assets, is not modifying it
     print(f"\tOLVM object {payload['displayName']} .. ", end='')
     if (payload['inventoryId'], payload['externalAssetKey'], payload['sourceKey']) in uniq_assets.keys():
-        print(f'Found {uniq_assets[(payload['inventoryId'], payload['externalAssetKey'], payload['sourceKey'])]}')
+        print(f"Found {uniq_assets[(payload['inventoryId'], payload['externalAssetKey'], payload['sourceKey'])]}")
         return
     url = f'https://cloudbridge.{config["region"]}.oci.oraclecloud.com/20220509/assets/'
     try:

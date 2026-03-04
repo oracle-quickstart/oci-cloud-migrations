@@ -113,10 +113,9 @@ def get_inventory_assets(config, signer, compartment_id, inventory_id, page=None
     try:
         r = requests.get(url, params=params, auth=signer)
         r.raise_for_status()
-    except RequestException as err:
-        if r.status_code >= 300:
-            eprint(f'Error occured while retrieving list of assets: {err}')
-            return assets
+    except Exception as err:
+        eprint(f'Error occured while retrieving list of assets: {err}')
+        exit(1)
     
     assets = r.json()['items']
     next_page = r.headers.get('opc-next-page')
@@ -186,7 +185,12 @@ if __name__ == '__main__':
     }
 
     secrets_client = oci.secrets.SecretsClient(config, signer=signer)
-    secret_response = secrets_client.get_secret_bundle(secret_id = secret_id, stage = 'CURRENT').data
+    try:
+        secret_response = secrets_client.get_secret_bundle(secret_id = secret_id, stage = 'CURRENT').data
+        print(secret_response.secret_bundle_content.content)
+    except Exception as e:
+        eprint(f'Error occured while getting OLVM credentials: {e}')
+        exit(1)
     olvm_secret = json.loads(base64.b64decode(secret_response.secret_bundle_content.content))
     print('Got OVLM secret!')
 

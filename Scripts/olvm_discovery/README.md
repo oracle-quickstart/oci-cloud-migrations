@@ -9,8 +9,8 @@ Standalone script, which performs discovery of OLVM resources and saves them as 
 
 ## Usage
 ```
-ansokolo$ python3 -m venv new_env
-ansokolo$ source ./new_env/bin/activate
+ansokolo$ python3 -m venv olvm_env
+ansokolo$ source ./olvm_env/bin/activate
 (olvm_env) ansokolo$ pip install -r requirements.txt
 (olvm_env) ansokolo$ oci session authenticate --region us-phoenix-1 --profile-name=DEFAULT
 (olvm_env) ansokolo$ python ./olvm_discovery.py ocid1.ocbassetsource.oc1.iad.amaaaaaag26i5naar3pn2gkajj4hdvalcawgmvncc3fcesvcs5wekgjj6xaa

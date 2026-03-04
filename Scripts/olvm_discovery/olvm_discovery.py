@@ -1,6 +1,6 @@
 import sys, json, oci, re, base64, requests
 from requests.exceptions import RequestException
-import tempfile, os, sys
+import tempfile, os
 import ovirtsdk4 as sdk
 from datetime import datetime, timezone
 from oci.exceptions import ServiceError
@@ -107,7 +107,7 @@ def format_vm_template_asset(at, obj):
 
 def get_inventory_assets(config, signer, compartment_id, inventory_id, page=None):
     url = f'https://cloudbridge.{config["region"]}.oci.oraclecloud.com/20220509/assets/'
-    params = {'compartmentId': compartment_id, 'inventoryId': inventory_id, 'lifecycleState': 'ACTIVE', 'inventoryId': inventory_id}
+    params = {'compartmentId': compartment_id, 'inventoryId': inventory_id, 'lifecycleState': 'ACTIVE'}
     if page:
         params['page'] = page
     try:
@@ -154,12 +154,19 @@ if __name__ == '__main__':
 
     asset_source_id = sys.argv[1]
     region = parse_ocid(asset_source_id)['region']
+    if region == False:
+        eprint(f'Error parsing asset source. Cannot proceed!')
+        exit(1)
     config, signer = auth(region=region, profile_name = 'DEFAULT')
     check_auth(config, signer)
     
     #cloud_bridge_client = oci.cloud_bridge.DiscoveryClient(config, signer=signer)
     url = f'https://cloudbridge.{config["region"]}.oci.oraclecloud.com/20220509/assetSources/{asset_source_id}'
-    asset_source = requests.get(url, auth=signer).json()
+    try:
+        asset_source = requests.get(url, auth=signer).json()
+    except Exception as e:
+        eprint(f'Error while retrieving asset source info: {e}')
+        exit(1)
     print('Got asset source!')
     olvm_endpoint = asset_source['olvmEndpoint']
     inventory_id = asset_source['inventoryId']
@@ -187,7 +194,6 @@ if __name__ == '__main__':
     secrets_client = oci.secrets.SecretsClient(config, signer=signer)
     try:
         secret_response = secrets_client.get_secret_bundle(secret_id = secret_id, stage = 'CURRENT').data
-        print(secret_response.secret_bundle_content.content)
     except Exception as e:
         eprint(f'Error occured while getting OLVM credentials: {e}')
         exit(1)

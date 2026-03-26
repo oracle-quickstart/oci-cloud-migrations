@@ -1,9 +1,12 @@
-resource "oci_kms_vault" "ocm_secrets" {
-  display_name   = "ocm-secrets"
-  count          = local.migration_secrets_compartment_available ? 1 : 0
-  compartment_id = local.migration_secrets_compartment_id
-  vault_type     = "DEFAULT"
+# This file contains all the compartment resources required for service functionalities
 
+resource "oci_identity_compartment" "migration_compartment" {
+  provider       = oci.homeregion
+  count          = local.iam_enabled ? 1 : 0
+  name           = "Migration"
+  description    = "Compartment for OCM resources."
+  compartment_id = var.compartment_ocid
+  enable_delete  = true
   defined_tags = merge({
     "${local.ocm_migration_tag_namespace}.${local.version_tag}"        = local.version_value,
     "${local.ocm_migration_tag_namespace}.${local.resource_level_tag}" = local.resource_level_values[1]
@@ -15,16 +18,13 @@ resource "oci_kms_vault" "ocm_secrets" {
   depends_on = [time_sleep.tags_availability_delay]
 }
 
-resource "oci_kms_key" "ocm_key" {
-  count          = local.migration_secrets_compartment_available ? 1 : 0
-  display_name   = "ocm-key"
-  compartment_id = local.migration_secrets_compartment_id
-  key_shape {
-    algorithm = "AES"
-    length    = "32"
-  }
-  management_endpoint = oci_kms_vault.ocm_secrets[0].management_endpoint
-
+resource "oci_identity_compartment" "migration_secrets_compartment" {
+  provider       = oci.homeregion
+  count          = local.iam_enabled ? 1 : 0
+  name           = "MigrationSecrets"
+  description    = "Compartment for OCM secrets."
+  compartment_id = var.compartment_ocid
+  enable_delete  = true
   defined_tags = merge({
     "${local.ocm_migration_tag_namespace}.${local.version_tag}"        = local.version_value,
     "${local.ocm_migration_tag_namespace}.${local.resource_level_tag}" = local.resource_level_values[1]

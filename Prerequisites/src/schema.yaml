@@ -12,8 +12,10 @@ variableGroups:
   - title: "Enabled Migrations"
     visible: primary_prerequisite_stack
     variables:
-      - ${migration_from_vmware}
-      - ${migration_from_aws}
+      - ${enabled_migration_scenario}
+      - ${add_vmware_to_oci}
+      - ${add_vmware_to_olvm}
+      - ${add_aws_to_oci}
   - title: "Replication Location"
     variables:
       - ${replication_bucket}
@@ -24,14 +26,14 @@ variableGroups:
       - ${migration_groups}
       - ${remote_agent_logging}
       - ${hydration_agent_logging}
-  - tile: "Remote Agent Appliance Logging"
+  - title: "Remote Agent Appliance Logging"
     visible: 
       and: 
         - remote_agent_logging
         - primary_prerequisite_stack
     variables:
       - ${ocb-service-tenancy-ocid}
-  - tile: "Hydration Agent Logging"
+  - title: "Hydration Agent Logging"
     visible: 
       and:
         - hydration_agent_logging
@@ -62,22 +64,71 @@ variables:
     required: false
   primary_prerequisite_stack:
     type: boolean
-    description: "Uncheck if working compartments, tag namespace, and serivce policies have already been deployed."
+    description: "Uncheck if working compartments, tag namespace, and service policies have already been deployed."
     title: "Primary Prerequisite Stack"
     required: true
     default: true
-  migration_from_aws:
-    type: boolean
-    description: "Create service policies needed for AWS EC2 migrations."
-    title: "AWS EC2 Migrations"
+  enabled_migration_scenario:
+    type: enum
+    description: "Select the enabled migration scenario. Note: \"VMware to OLVM\" (Limited Availability) migration is available for selected customers only during the LA phase."
+    title: "Enabled Migration Scenario"
     required: true
-    default: false
-  migration_from_vmware:
+    visible: primary_prerequisite_stack
+    enum:
+      - "VMware to OCI"
+      - "VMWare to OLVM (Limited Availability)"
+      - "AWS to OCI"
+  add_vmware_to_oci:
     type: boolean
-    description: "Create service policies needed for VMware VM migrations."
-    title: "VMware VM Migrations"
-    required: true
+    description: "Optionally enable VMware to OCI migrations in addition to the primary scenario."
+    title: "VMware to OCI"
+    required: false
     default: false
+    visible:
+      and:
+        - primary_prerequisite_stack
+        - not:
+          - eq:
+            - enabled_migration_scenario
+            - "VMware to OCI"
+        - not:
+          - eq:
+            - enabled_migration_scenario
+            - ""
+  add_vmware_to_olvm:
+    type: boolean
+    description: "Optionally enable VMware to OLVM migrations in addition to the primary scenario. Note: \"VMware to OLVM\" (Limited Availability) migration is available for selected customers only during the LA phase."
+    title: "VMware to OLVM (Limited Availability)"
+    required: false
+    default: false
+    visible:
+      and:
+        - primary_prerequisite_stack
+        - not:
+          - eq:
+            - enabled_migration_scenario
+            - "VMware to OLVM"
+        - not:
+          - eq:
+            - enabled_migration_scenario
+            - ""
+  add_aws_to_oci:
+    type: boolean
+    description: "Optionally enable AWS to OCI migrations in addition to the primary scenario."
+    title: "AWS to OCI"
+    required: false
+    default: false
+    visible:
+      and:
+        - primary_prerequisite_stack
+        - not:
+          - eq:
+            - enabled_migration_scenario
+            - "AWS to OCI"
+        - not:
+          - eq:
+            - enabled_migration_scenario
+            - ""
   migration_groups:
     type: boolean
     description: "Create base policies for migration administrators and migration operators."
@@ -87,21 +138,41 @@ variables:
   remote_agent_logging:
     type: boolean
     description: "Create service policies allowing Remote Agent Appliances upload logs."
-    title: "Enable Remote Agent Apppliance logging"
+    title: "Enable Remote Agent Appliance logging"
     required: false
     default: false
-  ocb-service-tenancy-ocid:
-    type: string
-    description: "Realm OCID of the Oracle Cloud Bridge service tenancy."
-    title: "Oracle Cloud Bridge service tenancy"
-    required: true
-    default: "ocid1.tenancy.oc1..aaaaaaaahr2xcduf4knzkzhkzt442t66bpqt3aazss6cy2ll6x4xj3ci7tiq"
+    visible:
+      or:
+        - eq:
+            - enabled_migration_scenario
+            - "VMware to OCI"
+        - eq:
+            - enabled_migration_scenario
+            - "VMware to OLVM"
+        - add_vmware_to_oci
+        - add_vmware_to_olvm
   hydration_agent_logging:
     type: boolean
     description: "Create service policies allowing Hydration Agents to upload logs."
     title: "Enable Hydration Agent logging"
     required: false
     default: false
+    visible:
+      or:
+        - eq:
+            - enabled_migration_scenario
+            - "VMware to OCI"
+        - eq:
+            - enabled_migration_scenario
+            - "AWS to OCI"
+        - add_vmware_to_oci
+        - add_aws_to_oci
+  ocb-service-tenancy-ocid:
+    type: string
+    description: "Realm OCID of the Oracle Cloud Bridge service tenancy."
+    title: "Oracle Cloud Bridge service tenancy"
+    required: true
+    default: "ocid1.tenancy.oc1..aaaaaaaahr2xcduf4knzkzhkzt442t66bpqt3aazss6cy2ll6x4xj3ci7tiq"
   ocm-service-tenancy-ocid:
     type: string
     description: "Realm OCID of the Oracle Cloud Migrations service tenancy."

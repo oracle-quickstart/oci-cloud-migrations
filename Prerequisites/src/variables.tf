@@ -32,8 +32,8 @@ variable "enabled_migration_scenario" {
   default     = ""
 
   validation {
-    condition     = (!var.primary_prerequisite_stack) || contains(["VMware to OCI", "VMware to OLVM", "AWS to OCI"], var.enabled_migration_scenario)
-    error_message = "Primary prerequisite stacks require selecting a valid enabled_migration_scenario (VMware to OCI, VMware to OLVM, AWS to OCI)."
+    condition     = contains(["", "VMware to OCI", "VMware to OLVM", "AWS to OCI"], var.enabled_migration_scenario)
+    error_message = "Valid values: VMware to OCI, VMware to OLVM, AWS to OCI."
   }
 }
 
@@ -70,29 +70,11 @@ variable "remote_agent_logging" {
   type        = bool
   description = "Create service policies allowing Remote Agent Appliances to upload logs."
   default     = false
-
-  validation {
-    condition = (!var.primary_prerequisite_stack) || (!var.remote_agent_logging) || (
-      contains(["VMware to OCI", "VMware to OLVM"], var.enabled_migration_scenario) ||
-      var.add_vmware_to_oci ||
-      var.add_vmware_to_olvm
-    )
-    error_message = "remote_agent_logging can only be enabled when a VMware scenario is enabled (VMware to OCI or VMware to OLVM)."
-  }
 }
 variable "hydration_agent_logging" {
   type        = bool
   description = "Create service policies allowing Hydration Agents to upload logs."
   default     = false
-
-  validation {
-    condition = (!var.primary_prerequisite_stack) || (!var.hydration_agent_logging) || (
-      contains(["VMware to OCI", "AWS to OCI"], var.enabled_migration_scenario) ||
-      var.add_vmware_to_oci ||
-      var.add_aws_to_oci
-    )
-    error_message = "hydration_agent_logging can only be enabled when a migration to OCI scenario is enabled (VMware to OCI or AWS to OCI)."
-  }
 }
 
 variable "ocb-service-tenancy-ocid" {

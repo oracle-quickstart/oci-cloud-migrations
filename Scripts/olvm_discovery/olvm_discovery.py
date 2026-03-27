@@ -29,6 +29,10 @@ def auth(profile_name = 'DEFAULT', region = False, location='~/.oci/config'):
         with open(token_file, 'r') as f:
             token = f.read()
         signer = oci.auth.signers.SecurityTokenSigner(token, private_key)
+        payload_b64 = token.split('.')[1]
+        payload_b64 += '=' * (-len(payload_b64) % 4)
+        payload = json.loads(base64.urlsafe_b64decode(payload_b64.encode()).decode())
+        config['user'] = payload.get('sub')
     else:
         signer = oci.signer.Signer(
             tenancy=config["tenancy"],
@@ -40,7 +44,7 @@ def auth(profile_name = 'DEFAULT', region = False, location='~/.oci/config'):
     return (config, signer)
 
 def check_auth(config,signer):
-    identity = oci.identity.IdentityClient(config={'region': config['region']},signer=signer)
+    identity = oci.identity.IdentityClient(config,signer=signer)
     try:
         resp = identity.get_tenancy(config["tenancy"])
         return True
@@ -226,6 +230,3 @@ if __name__ == '__main__':
 
     olvm_conn.close()
     os.unlink(tf.name)
-
-# Analyzing olvm_discovery.py error handling needs
-# opencode -s ses_3ad01e8f1ffejeGBSQYv0LB1v0

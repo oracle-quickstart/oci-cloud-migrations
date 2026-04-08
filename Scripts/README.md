@@ -13,3 +13,4 @@ These are example scripts that support the [Oracle Cloud Migrations](https://doc
 | [SetIP.py](SetIP/README.md)                              | Manage the private IP address of the target Assets in a migration plan                                      | Python           | 11 Nov 2024     |
 | [cbt.py](ChangeBlockTracking/README.md)                  | Check and configure Change Block Tracking for multiple VMs in vCenter                                       | Python           | 9 December 2024 |
 | [create_custom_image.py](create_custom_image/Readme.md)  | Create zero byte custom image used for windows migration                                                    | Python           | 3 October 2025  |
+| [target_report.py](target_asset_report/README.md)  | Create target asset report for a compartment                                                    | Python           | 8 April 2025  |

@@ -1,11 +1,8 @@
-title: Oracle Cloud Migrations Onboarding
-description: Deploy the resources required for the Oracle Cloud Migration service to function properly.
+title: Oracle Cloud Migrations Prerequisites
+description: Creates the prerequisite IAM policies, dynamic groups, compartments, and tags required by Oracle Cloud Migrations. Run this stack before using migration features in the OCI Console. See https://docs.oracle.com/en-us/iaas/Content/cloud-migration/cloud-migration-get-started.htm
 schemaVersion: 1.1.0
 version: "20190304"
 variableGroups:
-  - title: "Migration Root Location"
-    variables:
-      - ${compartment_ocid}
   - title: "Global Resources"
     variables:
       - ${primary_prerequisite_stack}
@@ -40,6 +37,9 @@ variableGroups:
         - primary_prerequisite_stack
     variables:
       - ${ocm-service-tenancy-ocid}
+  - title: "Advanced Configuration"
+    variables:
+      - ${compartment_ocid}
   - title: "Hidden"
     visible: false
     variables: 
@@ -48,39 +48,39 @@ variableGroups:
 variables:
   compartment_ocid:
     type: oci:identity:compartment:id
-    description: "The parent compartment where the working compartments (Migration and MigrationSecrets) will be created."
+    description: "<em>Advanced option.</em> The parent compartment where the <strong>Migration</strong> and <strong>MigrationSecrets</strong> working compartments will be created or reused. <strong>Recommended:</strong> leave this aligned with the compartment where you create the stack unless you intentionally want Oracle Cloud Migrations working compartments created somewhere else."
     title: "Migration Root Compartment"
     required: true
   create_replication_bucket:
     type: boolean
-    description: "Create a new Object Storage bucket used for data replication."
+    description: "Create the Object Storage bucket used for Oracle Cloud Migrations replication data. <strong>Leave this enabled</strong> for the default setup, or disable it only when you want to reuse an existing bucket named below."
     title: "Create a new replication bucket?"
     required: true
     default: true
   replication_bucket:
     type: string
-    description: "Name of an existing bucket or name of the replication bucket to be created."
+    description: "Name of the Object Storage bucket to create or reuse for <strong>Oracle Cloud Migrations replication data</strong>."
     title: "Replication Bucket Name"
     required: false
   primary_prerequisite_stack:
     type: boolean
-    description: "Uncheck if working compartments, tag namespace, and service policies have already been deployed."
+    description: "Leave enabled for the <strong>first prerequisite stack</strong> in a tenancy so shared IAM policies, dynamic groups, and tags are created. Uncheck only when those global resources already exist and this run should reuse them."
     title: "Primary Prerequisite Stack"
     required: true
     default: true
   enabled_migration_scenario:
     type: enum
-    description: "Select the enabled migration scenario. Note: \"VMware to OLVM\" (Limited Availability) migration is available for selected customers only during the LA phase."
+    description: "Select the primary migration scenario enabled by this prerequisite stack. Additional scenarios can be enabled below."
     title: "Enabled Migration Scenario"
     required: true
     visible: primary_prerequisite_stack
     enum:
       - "VMware to OCI"
-      - "VMWare to OLVM (Limited Availability)"
+      - "VMware to OLVM"
       - "AWS to OCI"
   add_vmware_to_oci:
     type: boolean
-    description: "Optionally enable VMware to OCI migrations in addition to the primary scenario."
+    description: "Also enable VMware to OCI prerequisites in addition to the primary scenario selected above."
     title: "VMware to OCI"
     required: false
     default: false
@@ -97,8 +97,8 @@ variables:
             - ""
   add_vmware_to_olvm:
     type: boolean
-    description: "Optionally enable VMware to OLVM migrations in addition to the primary scenario. Note: \"VMware to OLVM\" (Limited Availability) migration is available for selected customers only during the LA phase."
-    title: "VMware to OLVM (Limited Availability)"
+    description: "Also enable VMware to OLVM prerequisites in addition to the primary scenario selected above."
+    title: "VMware to OLVM"
     required: false
     default: false
     visible:
@@ -114,7 +114,7 @@ variables:
             - ""
   add_aws_to_oci:
     type: boolean
-    description: "Optionally enable AWS to OCI migrations in addition to the primary scenario."
+    description: "Also enable AWS to OCI prerequisites in addition to the primary scenario selected above."
     title: "AWS to OCI"
     required: false
     default: false
@@ -131,13 +131,13 @@ variables:
             - ""
   migration_groups:
     type: boolean
-    description: "Create base policies for migration administrators and migration operators."
+    description: "Create example IAM groups and policies for <strong>migration administrators</strong> and <strong>migration operators</strong> in addition to the core service prerequisites."
     title: "Migration Service User Groups"
     required: false
     default: false
   remote_agent_logging:
     type: boolean
-    description: "Create service policies allowing Remote Agent Appliances upload logs."
+    description: "Create cross-tenancy policies that allow <strong>Remote Agent Appliances</strong> used in VMware-based migrations to upload service logs."
     title: "Enable Remote Agent Appliance logging"
     required: false
     default: false
@@ -153,7 +153,7 @@ variables:
         - add_vmware_to_olvm
   hydration_agent_logging:
     type: boolean
-    description: "Create service policies allowing Hydration Agents to upload logs."
+    description: "Create cross-tenancy policies that allow <strong>Hydration Agents</strong> used in migration-to-OCI workflows to upload service logs."
     title: "Enable Hydration Agent logging"
     required: false
     default: false
@@ -169,13 +169,13 @@ variables:
         - add_aws_to_oci
   ocb-service-tenancy-ocid:
     type: string
-    description: "Realm OCID of the Oracle Cloud Bridge service tenancy."
+    description: "Optional Oracle Cloud Bridge service tenancy OCID override used by the Remote Agent Appliance logging policy. Leave blank in OC1; provide the realm-specific value when enabling this logging policy in another realm."
     title: "Oracle Cloud Bridge service tenancy"
-    required: true
-    default: "ocid1.tenancy.oc1..aaaaaaaahr2xcduf4knzkzhkzt442t66bpqt3aazss6cy2ll6x4xj3ci7tiq"
+    required: false
+    default: ""
   ocm-service-tenancy-ocid:
     type: string
-    description: "Realm OCID of the Oracle Cloud Migrations service tenancy."
+    description: "Optional Oracle Cloud Migrations service tenancy OCID override used by the Hydration Agent logging policy. Leave blank in OC1; provide the realm-specific value when enabling this logging policy in another realm."
     title: "Oracle Cloud Migrations service tenancy"
-    required: true
-    default: "ocid1.tenancy.oc1..aaaaaaaartv6j5muce2s4djz7rvfn2vwceq3cnue33d72isntnlfmi7huv7q"
+    required: false
+    default: ""

@@ -8,10 +8,10 @@ locals {
 
   # Tenancy level policy statements
   hydration_agent_logging_define_statements = [
-    "Define tenancy OCM-SERVICE AS ${var.ocm-service-tenancy-ocid}"
+    "Define tenancy OCM-SERVICE AS ${local.ocm_service_tenancy_ocid}"
   ]
   remote_agent_logging_define_statements = [
-    "Define tenancy OCB-SERVICE as ${var.ocb-service-tenancy-ocid}"
+    "Define tenancy OCB-SERVICE as ${local.ocb_service_tenancy_ocid}"
   ]
   hydration_agent_logging_endorse_statements = [
     "Endorse dynamic-group ${local.hydration_agent_dg_name} to { OBJECT_CREATE } in tenancy OCM-SERVICE where all { target.bucket.name = '${var.tenancy_ocid}' }"
@@ -95,7 +95,7 @@ resource "oci_identity_policy" "ocm_tenancy_level_policy" {
   provider       = oci.homeregion
   count          = local.iam_enabled ? 1 : 0
   name           = "${local.prefix}-ocm-tenancy-level-policy"
-  description    = "Tenancy level policy for migrations."
+  description    = "Tenancy-level policy that grants Oracle Cloud Migrations service dynamic groups access to shared tenancy resources such as inventory, metrics, and optional cross-tenancy logging destinations."
   compartment_id = var.tenancy_ocid
   statements = concat(
     # DEFINE statements must be at the beginning
@@ -116,6 +116,16 @@ resource "oci_identity_policy" "ocm_tenancy_level_policy" {
     # Statements for ocm_tenancy_level_policy_vmware_migration
     local.migration_from_vmware ? local.remote_agent_and_plugins_dg_tenancy_level_vmware_migration_statements : []
   )
+  lifecycle {
+    precondition {
+      condition     = !var.hydration_agent_logging || !local.migration_to_oci || local.ocm_service_tenancy_ocid != ""
+      error_message = "No Oracle Cloud Migrations service tenancy OCID is configured for realm ${local.realm}. Built-in resolution is available for OC1; set ocm-service-tenancy-ocid for another realm."
+    }
+    precondition {
+      condition     = !var.remote_agent_logging || !local.migration_from_vmware || local.ocb_service_tenancy_ocid != ""
+      error_message = "No Oracle Cloud Bridge service tenancy OCID is configured for realm ${local.realm}. Built-in resolution is available for OC1; set ocb-service-tenancy-ocid for another realm."
+    }
+  }
   defined_tags = merge({
     "${local.ocm_migration_tag_namespace}.${local.version_tag}"        = local.version_value,
     "${local.ocm_migration_tag_namespace}.${local.resource_level_tag}" = local.resource_level_values[0]
@@ -134,7 +144,7 @@ resource "oci_identity_policy" "ocm_compartment_level_policy" {
   provider       = oci.homeregion
   count          = local.iam_enabled ? 1 : 0
   name           = "${local.prefix}-ocm-compartment-level-policy"
-  description    = "Compartment level policy for migrations."
+  description    = "Compartment-level policy that grants Oracle Cloud Migrations service dynamic groups access to migration workloads, replication data, secrets, and discovery resources in the customer-selected working compartments."
   compartment_id = var.compartment_ocid
   statements = concat(
     # Statements for migration_service_policy_any_migration

@@ -20,9 +20,33 @@ data "oci_identity_compartments" "existing_migration_secrets_compartment" {
   state          = "ACTIVE"
 }
 
+data "oci_identity_tag_namespaces" "existing_migration_tag_namespace" {
+  provider       = oci.homeregion
+  compartment_id = var.tenancy_ocid
+  state          = "ACTIVE"
+}
+
+data "oci_identity_dynamic_groups" "existing_dynamic_groups" {
+  provider       = oci.homeregion
+  compartment_id = var.tenancy_ocid
+  state          = "ACTIVE"
+}
+
+data "oci_identity_policies" "existing_tenancy_policies" {
+  provider       = oci.homeregion
+  compartment_id = var.tenancy_ocid
+  state          = "ACTIVE"
+}
+
+data "oci_identity_policies" "existing_compartment_policies" {
+  provider       = oci.homeregion
+  compartment_id = var.compartment_ocid
+  state          = "ACTIVE"
+}
+
 locals {
   # Prefix that will be used to create all resources outside of this two compartments (Migration and MigrationSecrets)
-  version_value               = "2.3"
+  version_value               = "2.4"
   prefix                      = lower(data.oci_identity_compartment.customer_compartment.name)
   ocm_migration_tag_namespace = "CloudMigrations"
   version_tag                 = "PrerequisiteVersion"
@@ -43,8 +67,15 @@ locals {
   primary_prerequisite_stack                    = var.primary_prerequisite_stack
   existing_migration_compartment_exists         = length(data.oci_identity_compartments.existing_migration_compartment.compartments) > 0
   existing_migration_secrets_compartment_exists = length(data.oci_identity_compartments.existing_migration_secrets_compartment.compartments) > 0
-  migration_compartment_available               = local.primary_prerequisite_stack || local.existing_migration_compartment_exists
-  migration_secrets_compartment_available       = local.primary_prerequisite_stack || local.existing_migration_secrets_compartment_exists
+  existing_migration_tag_namespace_exists = length([
+    for namespace in data.oci_identity_tag_namespaces.existing_migration_tag_namespace.tag_namespaces :
+    namespace.name if namespace.name == local.ocm_migration_tag_namespace
+  ]) > 0
+  migration_compartment_available             = local.primary_prerequisite_stack || local.existing_migration_compartment_exists
+  migration_secrets_compartment_available     = local.primary_prerequisite_stack || local.existing_migration_secrets_compartment_exists
+  migration_compartment_name_conflict         = local.iam_enabled && local.existing_migration_compartment_exists
+  migration_secrets_compartment_name_conflict = local.iam_enabled && local.existing_migration_secrets_compartment_exists
+  migration_tag_namespace_collision           = local.tags_enabled && local.existing_migration_tag_namespace_exists
 
   migration_compartment_id = try(
     oci_identity_compartment.migration_compartment[0].id,
@@ -77,6 +108,36 @@ locals {
   migration_groups_enabled = local.iam_enabled && var.migration_groups
   vmware_migration_enabled = local.iam_enabled && local.migration_from_vmware
   migration_to_oci_enabled = local.iam_enabled && local.migration_to_oci
+  expected_dynamic_group_names = compact([
+    local.iam_enabled ? "${local.prefix}-migration-dg" : "",
+    local.vmware_migration_enabled ? "${local.prefix}-remote-agent-and-plugins-dg" : "",
+    local.iam_enabled ? "${local.prefix}-discovery-dg" : "",
+    local.migration_to_oci_enabled ? "${local.prefix}-hydration-agent-dg" : ""
+  ])
+  existing_dynamic_group_names = [
+    for dynamic_group in data.oci_identity_dynamic_groups.existing_dynamic_groups.dynamic_groups :
+    dynamic_group.name
+  ]
+  conflicting_dynamic_group_names = [
+    for name in local.expected_dynamic_group_names :
+    name if contains(local.existing_dynamic_group_names, name)
+  ]
+  expected_policy_names = compact([
+    local.iam_enabled ? "${local.prefix}-ocm-tenancy-level-policy" : "",
+    local.iam_enabled ? "${local.prefix}-ocm-compartment-level-policy" : ""
+  ])
+  existing_tenancy_policy_names = [
+    for policy in data.oci_identity_policies.existing_tenancy_policies.policies :
+    policy.name
+  ]
+  existing_compartment_policy_names = [
+    for policy in data.oci_identity_policies.existing_compartment_policies.policies :
+    policy.name
+  ]
+  conflicting_policy_names = [
+    for name in local.expected_policy_names :
+    name if contains(local.existing_tenancy_policy_names, name) || contains(local.existing_compartment_policy_names, name)
+  ]
   vmware_defined_tags = {
     "${local.ocm_migration_tag_namespace}.${local.vmware_use_case_tag}" = local.use_case_enabled_tag_value
   }

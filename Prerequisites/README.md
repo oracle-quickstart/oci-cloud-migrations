@@ -1,6 +1,10 @@
 # Overview
 This Terraform implements the [prerequisites](https://docs.oracle.com/en-us/iaas/Content/cloud-migration/cloud-migration-get-started.htm#cloud-migration-prerequisites-ocm) needed to use Oracle Cloud Migrations for migrating VMware VMs, AWS EC2 instances, or OLVM VMs to Oracle Cloud Infrastructure.
 
+# Service Tenancy Overrides
+
+The stack resolves the optional Oracle Cloud Bridge and Oracle Cloud Migrations service tenancy OCIDs automatically in OC1. When enabling Remote Agent Appliance logging or Hydration Agent logging in another realm, provide the corresponding service tenancy OCID override. An override is not required when the associated logging option is disabled.
+
 # Deployed Resources
 
 - Compartments - The recommended Migration and MigrationSecrets [compartments](https://docs.oracle.com/en-us/iaas/Content/cloud-migration/cloud-migration-get-started.htm#cloud-migration-recommendations-compartments).

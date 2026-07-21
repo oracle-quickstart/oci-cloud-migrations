@@ -1,41 +1,61 @@
+# OCM Rename and move boot and block volumes
 
-# OCI Compute Instances Block Storage Update 
-This Python script automates the process of assigning display names and compartments for the boot and block volumes of an existing compute instance. Specifically designed to resolve post-migration issues with Oracle Cloud Infrastructure (OCI) migrated images using OCM (Oracle Cloud Migration) Tool RMS stack, the script addresses a challenge where a migrated image, when spun up using the OCM RMS stack, is assigned random names for its boot and block volumes. These names are difficult to correlate with the associated OCI compute instance. Additionally, the OCM RMS stack places the boot and block volumes in a migration compartment rather than the correct compartment.
+A Python utility for Oracle Cloud Infrastructure (OCI) that finds and fixes boot and block volumes left behind in a migration compartment after instances are launched elsewhere.
 
-##### The script performs the following steps:
+## Background
 
-- Capture Configuration Details:
-Captures instance configuration and block storage/s details.
+When workloads are migrated with the **Oracle Cloud Migration (OCM) Service**, compute instances are often created in a target compartment while their boot and block volumes remain in the original migration compartment. Those volumes typically keep auto-generated names from the migration process rather than meaningful names tied to the instance.
 
-- Modify the Boot and Block Volume Display Name:
-Modify the display names of the boot and block volume/s attached to the compute instance to match the compute instance name.
+This script helps clean up that situation by:
 
-- Update the Boot and Block Volume Compartment:
-Move the boot and block volume/s to the compartment where the compute instance resides.
+1. Scanning compute instances in a specified compartment
+2. Detecting attached boot and block volumes that are **not** in the same compartment as the instance
+3. Optionally renaming and moving only the mismatched volumes to align with the compute instance
 
-## Input Parameters JSON
-Ensure to provide the necessary input parameters in a JSON file. Here is an example:
+## What the script does
 
-JSON
-```sh
-{
-    "instance_id": "ocid1.instance.XXXXX",
-    "config_file": "<OCI Config File e.g. ~/.oci/config>",
-    "config_profile": "<OCI Config Profile name e.g. DEFAULT>"
-}
+### Default mode (report only)
+
+Without `-fix`, the script performs a read-only audit:
+
+- Lists all active compute instances in the target compartment
+- Checks each instance's attached boot and block volumes
+- Reports any volume whose compartment differs from the instance compartment
+
+### Fix mode (`-fix`)
+
+With `-fix`, the script prepares changes **only for mismatched volumes**:
+
+1. Shows a preview of every planned rename and compartment move
+2. Prompts for confirmation (`y` / `yes` to proceed; anything else cancels)
+3. **Phase 1 — Rename** mismatched volumes:
+   - Boot volume → `{instance name} (Boot Volume)`
+   - Block volumes → `{instance name} (Block Volume 01)`, `{instance name} (Block Volume 02)`, …
+4. **Phase 2 — Move** those volumes into the same compartment as the compute instance
+
+Volumes already in the correct compartment are not renamed or moved.
+
+### Running the script
+
+Easiest way to run this script is from the OCI Cloud Shell:
+```
+git clone https://github.com/oracle-quickstart/oci-cloud-migrations.git
+cd Scripts/rename_move_volumes
+python ocm-fixstorage.py -c [compartmentOCID or (partial) name of compartment]
 ```
 
-### How to Run
-Save the input parameters in a JSON file (e.g., input_params.json).
-Execute the script with the following command:
-```sh
-python rename_move_volumes.py --input_json_file input_params.json
+Specify in the example above, in which compartment you want to check the compute instances.
 
+
+Fixing any mismatches, use the -fix option
+```
+python ocm-fixstorage.py -c [compartmentOCID or (partial) name of compartment] -fix
 ```
 
-### Notes
-- The script uses the OCI SDK for Python. Make sure to install the necessary dependencies before running the script.
-- It's recommended to review the script and customize it according to your specific requirements before execution.
 
-### Disclaimer:
-This script is provided for experimental purposes only and should not be used in production. It is provided to assist your development or administration efforts and provided “AS IS” and is NOT supported by Oracle Corporation. The script has been tested in a test environment and appears to work as intended. You should always run new scripts on a test environment and validate and modify the same as per your requirements before using on your application environment.
+
+
+### Alternative way to run script
+
+You can run the script from any place where you have the OCI CLI configured with the correct authentication (likely in an .OCI\config file)
+

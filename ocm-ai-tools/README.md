@@ -4,7 +4,7 @@ AI-assistant guidance for Oracle Cloud Migrations customer workflows.
 
 The current content focuses on prerequisite readiness: validating the prerequisite stack, explaining non-green readiness bars, and guiding Resource Manager stack setup or remediation.
 
-## Use Without aipack
+## Use Directly
 
 No installer is required.
 
@@ -34,7 +34,7 @@ The generated surface contains `migration-prereqs`, `migration-prereqs-validate`
 
 ## Optional aipack
 
-`aipack` is optional. It installs the same content into supported AI assistant harnesses and can enable the packaged OCI MCP configuration.
+`aipack` is optional. See the [AIPack repository](https://github.com/shrug-labs/aipack) for installation and usage. It installs the same content into supported AI assistant harnesses and can enable the packaged OCI MCP configuration.
 
 ```sh
 aipack pack install --url https://github.com/oracle-quickstart/oci-cloud-migrations.git --path ocm-ai-tools --ref main --with all

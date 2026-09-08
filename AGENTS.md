@@ -26,6 +26,8 @@ python3 ocm-ai-tools/scripts/render_agent_skills.py --check
 
 The generated projection contains one core readiness skill and two workflow-derived entry points: read-only validation and mutation-gated onboarding. The source workflows remain workflows in the AIPack pack.
 
+The skills are portable across Skills CLI-supported agents. This repository has validated the installation and invocation path with Codex; other agents have not been tested here.
+
 ## Safety and public scope
 
 Validation is read-only. Onboarding must preserve the separate confirmation gates for stack create or update, PLAN, APPLY, and DESTROY. Keep internal OCIDs, tenancy names, private links, internal tickets, and team procedures out of this repository.

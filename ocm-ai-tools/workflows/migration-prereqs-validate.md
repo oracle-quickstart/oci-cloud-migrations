@@ -1,6 +1,6 @@
 ---
 name: migration-prereqs-validate
-description: Assess a customer's OCM prerequisite readiness from live OCI evidence without changing tenancy or Resource Manager state.
+description: Use when a customer needs a read-only assessment of OCM prerequisite readiness from live OCI evidence.
 metadata:
   owner: ocm
   last_updated: 2026-08-19

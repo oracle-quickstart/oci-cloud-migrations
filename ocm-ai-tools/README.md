@@ -13,7 +13,9 @@ No installer is required.
 3. Give your assistant the files under `skills/migration-prereqs/` when it needs bar-by-bar validation details.
 4. Start from `examples/prereq-readiness-request.md` or `prompts/prereq-readiness-check.md` if you want a copy-ready request.
 
-Live validation requires OCI tenancy access. The packaged MCP config uses the public OCI MCP server from `oracle/mcp`; an equivalent OCI CLI or SDK workflow can also follow the same validation steps.
+Live deterministic validation requires OCI CLI tenancy access. The packaged MCP config uses the public OCI MCP server from `oracle/mcp` for optional follow-up diagnostics or corroboration; this pack does not provide an SDK-only verifier.
+
+The generated skills are portable across Skills CLI-supported agents. The commands below target Codex because Codex is the only agent tested for this pack; replace `codex` with another supported agent name only after validating that agent's installation and invocation behavior.
 
 ## Skills CLI
 
@@ -32,6 +34,8 @@ npx skills add ./.agents/skills --skill '*' --agent codex --yes
 
 The generated surface contains `migration-prereqs`, `migration-prereqs-validate`, and `migration-prereqs-onboard`. The authored core skill and the source workflows remain in this directory for AIPack and direct GitHub use.
 
+Install all three entry points together. The validation and onboarding workflow skills depend on the core `migration-prereqs` skill; installing either workflow by itself is incomplete.
+
 ## Optional aipack
 
 `aipack` is optional. See the [AIPack repository](https://github.com/shrug-labs/aipack) for installation and usage. It installs the same content into supported AI assistant harnesses and can enable the packaged OCI MCP configuration.
@@ -43,6 +47,13 @@ aipack sync --profile ocm-ai-tools
 ```
 
 Set `oci_config_profile` in `profiles/ocm-ai-tools.yaml` if you do not use the `DEFAULT` OCI profile.
+
+To refresh an installed pack, fetch the updated source and then sync it:
+
+```sh
+aipack pack update ocm-ai-tools --with all
+aipack sync --profile ocm-ai-tools
+```
 
 ## Contents
 
@@ -58,23 +69,12 @@ Set `oci_config_profile` in `profiles/ocm-ai-tools.yaml` if you do not use the `
 
 `migration-prereqs-validate` is read-only. `migration-prereqs-onboard` requires a Resource Manager plan review and explicit customer confirmation before any apply operation. The workflows do not create prerequisite resources directly through ad hoc API calls.
 
-## Primary workflow-as-skill surface
+## Updates and support
 
 The repository-root `.agents/skills/` directory is generated from this pack by `scripts/render_agent_skills.py`. It is the primary install surface for the Skills CLI because it exposes the core skill and both workflow entry points as installable `SKILL.md` directories. Do not edit the generated files directly.
 
-Install all three entry points from GitHub:
-
-```sh
-npx skills add https://github.com/oracle-quickstart/oci-cloud-migrations/tree/main/.agents/skills \
-  --skill '*' --global --agent codex --yes
-```
-
-From a clone of the repository:
-
-```sh
-npx skills add ./.agents/skills --skill '*' --agent codex --yes
-```
+After a global Skills CLI install, update with `npx skills update --global --yes`. After a clone-local install, update with `npx skills update --project --yes`.
 
 The current prerequisite contract is v2.4. `Prerequisites/` remains the canonical repository Terraform and archive source; the generated skill projection contains only the agent instructions and verifier support needed by the three entry points.
 
-Update installed Skills CLI content with `npx skills update`. Use [GitHub Issues](https://github.com/oracle-quickstart/oci-cloud-migrations/issues) for support and include the entry point, scenario, and sanitized verifier output; never include credentials or tenancy-specific secrets.
+Use [GitHub Issues](https://github.com/oracle-quickstart/oci-cloud-migrations/issues) for support and include the entry point, scenario, and sanitized verifier output. Before sharing verifier output, redact tenancy, compartment, stack, bucket, job, profile, namespace, and credential identifiers. For security vulnerabilities, follow the repository's [security policy](../SECURITY.md) instead of opening an issue.

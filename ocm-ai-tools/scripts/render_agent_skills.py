@@ -16,13 +16,27 @@ OUTPUT = ROOT / ".agents" / "skills"
 
 WORKFLOWS = {
     "migration-prereqs-validate": {
-        "description": "Use when a customer needs a read-only assessment of OCM prerequisite readiness from live OCI evidence.",
         "filename": "migration-prereqs-validate.md",
     },
     "migration-prereqs-onboard": {
-        "description": "Use when a customer explicitly requests OCM prerequisite setup or remediation through Resource Manager.",
         "filename": "migration-prereqs-onboard.md",
     },
+}
+
+WORKFLOW_REFERENCES = {
+    "migration-prereqs-validate": (
+        "oci-api-reference.md",
+        "stack-resources.md",
+        "stack-variables.md",
+        "version-compatibility.md",
+    ),
+    "migration-prereqs-onboard": (
+        "oci-api-reference.md",
+        "rms-guide.md",
+        "stack-resources.md",
+        "stack-variables.md",
+        "version-compatibility.md",
+    ),
 }
 
 
@@ -50,7 +64,7 @@ def _render_workflow(name: str, source_path: Path) -> str:
         f"  source_path: ocm-ai-tools/workflows/{source_path.name}\n"
     )
 
-    description = WORKFLOWS[name]["description"]
+    description = _frontmatter_value(frontmatter, "description")
     return (
         "---\n"
         f"name: {name}\n"
@@ -75,10 +89,13 @@ def _build(destination: Path) -> None:
         skill_dir = destination / name
         skill_dir.mkdir()
         (skill_dir / "SKILL.md").write_text(rendered, encoding="utf-8")
-        shutil.copytree(
-            SOURCE / "skills" / "migration-prereqs" / "references",
-            skill_dir / "references",
-        )
+        references = skill_dir / "references"
+        references.mkdir()
+        for reference_name in WORKFLOW_REFERENCES[name]:
+            shutil.copy2(
+                SOURCE / "skills" / "migration-prereqs" / "references" / reference_name,
+                references / reference_name,
+            )
 
 
 def _files(root: Path) -> list[Path]:

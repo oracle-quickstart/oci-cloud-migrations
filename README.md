@@ -40,4 +40,12 @@ After cloning this repository, use the same project-local surface:
 npx skills add ./.agents/skills --skill '*' --agent codex --yes
 ```
 
-The current prerequisite contract is v2.4. Update installed Skills CLI content with `npx skills update`. The optional AIPack composition and update route are documented in [`ocm-ai-tools/README.md`](ocm-ai-tools/README.md).
+These are portable Agent Skills and can be used with other Skills CLI-supported agents. The commands above use `--agent codex` because Codex is the only agent tested for this repository; replace `codex` with another supported agent name at your own validation risk.
+
+Install the three-entry-point bundle together. `migration-prereqs-validate` and `migration-prereqs-onboard` depend on the core `migration-prereqs` skill.
+
+After a global install, update with `npx skills update --global --yes`. After a clone-local install, update with `npx skills update --project --yes`.
+
+After installation, ask your assistant for a read-only OCM prerequisite assessment and provide the migration scenario and root compartment. Use the onboarding entry point only when setup or remediation is explicitly requested.
+
+The current prerequisite contract is v2.4. The optional AIPack composition and update route are documented in [`ocm-ai-tools/README.md`](ocm-ai-tools/README.md).

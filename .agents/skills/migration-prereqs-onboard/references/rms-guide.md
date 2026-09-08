@@ -39,7 +39,7 @@ Read `version-compatibility.md` before configuring a stack. The current source h
 
 ## Fresh stack preparation
 
-Before calling either operation below, use the onboarding workflow's preparation `MUTATION` gate.
+Before `create_stack`, use the onboarding workflow's stack-preparation `MUTATION` gate. After the stack is created, use a separate PLAN `MUTATION` gate immediately before creating the PLAN job.
 
 CLI:
 
@@ -90,11 +90,11 @@ Parameters:
     job_operation: PLAN
 ```
 
-Both calls mutate Resource Manager state. PLAN does not change prerequisite resources, but it creates a job record and still requires the preparation gate.
+Both calls mutate Resource Manager state. PLAN does not change prerequisite resources, but it creates a job record and requires its own separate PLAN gate.
 
 ## Existing stack preparation
 
-Before `update_stack`, present the exact source and variable delta in the preparation `MUTATION` gate.
+Before `update_stack`, present the exact source and variable delta in the stack-preparation `MUTATION` gate.
 
 CLI:
 
@@ -114,7 +114,7 @@ Parameters:
     variables: <complete_confirmed_variable_map>
 ```
 
-After update, create a PLAN job with the same call shape as the fresh path.
+After update, present the separate PLAN `MUTATION` gate, then create a PLAN job with the same call shape as the fresh path.
 
 ## Plan review
 

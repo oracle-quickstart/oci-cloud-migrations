@@ -118,7 +118,8 @@ Bar 6 is green only when every required bar is green. Any proven required red or
 
 - Present a gate with these fields: `MUTATION`, `Target`, `Action`, `Expected outcome`, `Plan or changes`, and `Cleanup or rollback`.
 - Name the exact Resource Manager API operation and job operation; never use a generic approval request.
-- Wait for explicit confirmation immediately before stack create/update plus PLAN.
+- Wait for explicit confirmation immediately before stack create/update.
+- After stack create/update completes, present a separate PLAN mutation gate and wait for explicit confirmation immediately before PLAN job creation.
 - Present the completed plan before requesting separate APPLY confirmation.
 - Describe DESTROY as a cleanup attempt, not guaranteed rollback: KMS deletion is scheduled and non-empty or manually managed resources can remain.
 - Re-run read-only validation after each approved mutation.

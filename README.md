@@ -20,3 +20,24 @@ Copyright (c) 2018-2020 Oracle and/or its affiliates.
 
 Released under the Universal Permissive License v1.0 as shown at
 <https://oss.oracle.com/licenses/upl/>.
+
+## OCI Cloud Migrations AI Tools
+
+Oracle Cloud Migrations (OCM) supports discovery, planning, and execution for VMware, AWS EC2, and Oracle Linux Virtualization Manager workloads moving to Oracle Cloud Infrastructure. Prerequisites are step zero: validate the required identity, compartment, authorization, encryption, storage, and end-to-end resources before downstream migration work.
+
+The authored public AI-assistant pack is in [`ocm-ai-tools/`](ocm-ai-tools/). The generated [`.agents/skills/`](.agents/skills/) directory exposes the prerequisite skill plus the read-only validation and mutation-gated onboarding workflows as installable Agent Skills.
+
+Install all three entry points from GitHub:
+
+```bash
+npx skills add https://github.com/oracle-quickstart/oci-cloud-migrations/tree/main/.agents/skills \
+  --skill '*' --global --agent codex --yes
+```
+
+After cloning this repository, use the same project-local surface:
+
+```bash
+npx skills add ./.agents/skills --skill '*' --agent codex --yes
+```
+
+The current prerequisite contract is v2.4. Update installed Skills CLI content with `npx skills update`. The optional AIPack composition and update route are documented in [`ocm-ai-tools/README.md`](ocm-ai-tools/README.md).

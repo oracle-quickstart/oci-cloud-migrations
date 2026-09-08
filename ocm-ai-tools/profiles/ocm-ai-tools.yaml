@@ -1,0 +1,13 @@
+# Customer profile: OCI Cloud Migrations prerequisite setup, validation, and remediation.
+schema_version: 2
+params:
+  oci_config_profile: DEFAULT
+packs:
+  - name: ocm-ai-tools
+    enabled: true
+    mcp:
+      oci-mcp:
+        enabled: true
+        allowed_tools:
+          - invoke_oci_api
+          - list_client_operations

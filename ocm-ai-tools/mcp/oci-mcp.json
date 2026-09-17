@@ -1,0 +1,26 @@
+{
+  "name": "oci-mcp",
+  "transport": "stdio",
+  "timeout": 120,
+  "command": [
+    "uvx",
+    "--python",
+    "3.13",
+    "oracle.oci-cloud-mcp-server==2.1.0"
+  ],
+  "env": {
+    "OCI_CONFIG_FILE": "{env:HOME}/.oci/config",
+    "OCI_CONFIG_PROFILE": "{params.oci_config_profile:-DEFAULT}",
+    "FASTMCP_LOG_LEVEL": "ERROR"
+  },
+  "links": [
+    "https://github.com/oracle/mcp",
+    "https://pypi.org/project/oracle.oci-cloud-mcp-server/"
+  ],
+  "auth": "OCI config file (~/.oci/config) with API key or security token auth.",
+  "notes": "OCI Python SDK MCP server from PyPI (oracle/mcp).",
+  "available_tools": [
+    "invoke_oci_api",
+    "list_client_operations"
+  ]
+}

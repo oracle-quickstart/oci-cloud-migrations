@@ -128,6 +128,10 @@ def _parse_args() -> argparse.Namespace:
         "--replication-bucket-name",
         help="Explicit configured replication bucket name when stack evidence is unavailable",
     )
+    parser.add_argument(
+        "--object-storage-namespace",
+        help="Customer Object Storage namespace for delegated-access validation",
+    )
     parser.add_argument("--json", action="store_true", help="Output JSON")
     return parser.parse_args()
 
@@ -378,7 +382,7 @@ def _list_child_compartments(
 def _list_dynamic_groups(
     context: OciCliContext, tenancy_ocid: str
 ) -> list[dict[str, Any]]:
-    return _oci(
+    groups = _oci(
         context,
         [
             "iam",
@@ -390,6 +394,30 @@ def _list_dynamic_groups(
         ],
         allow_empty=True,
     )
+    hydrated: list[dict[str, Any]] = []
+    for group in groups:
+        group_id = _field(group, "id")
+        if not group_id:
+            hydrated.append(group)
+            continue
+        details = _oci(
+            context,
+            [
+                "iam",
+                "dynamic-group",
+                "get",
+                "--dynamic-group-id",
+                group_id,
+            ],
+        )
+        if not isinstance(details, dict):
+            raise RuntimeError(
+                f"OCI dynamic-group get returned an unexpected response for {group_id}"
+            )
+        merged = dict(group)
+        merged.update(details)
+        hydrated.append(merged)
+    return hydrated
 
 
 def _list_policies(
@@ -452,6 +480,70 @@ def _get_object_storage_namespace(context: OciCliContext) -> str:
     if not isinstance(value, str) or not value:
         raise RuntimeError("Object Storage namespace response did not contain a namespace")
     return value
+
+
+def _list_stack_associated_resources(
+    context: OciCliContext, stack_id: str
+) -> list[dict[str, Any]]:
+    response = _oci(
+        context,
+        [
+            "resource-manager",
+            "associated-resource-summary",
+            "list-stack-associated-resources",
+            "--stack-id",
+            stack_id,
+            "--all",
+        ],
+        allow_empty=True,
+    )
+    if isinstance(response, list):
+        return response
+    if isinstance(response, dict):
+        items = _field(response, "items", [])
+        if isinstance(items, list):
+            return items
+    raise RuntimeError(
+        f"Stack associated-resource response for {stack_id} did not contain items"
+    )
+
+
+def _stack_attribute_value(value: Any) -> Any:
+    if not isinstance(value, str):
+        return value
+    try:
+        return json.loads(value)
+    except json.JSONDecodeError:
+        return value
+
+
+def _find_stack_replication_bucket(
+    resources: list[dict[str, Any]],
+) -> dict[str, str] | None:
+    candidates: list[dict[str, str]] = []
+    for resource in resources:
+        if _field(resource, "resource-type") != "oci_objectstorage_bucket":
+            continue
+        attributes = _field(resource, "attributes", {}) or {}
+        resource_id = str(_field(resource, "resource-id", "") or "")
+        parts = resource_id.split("/")
+        namespace = _stack_attribute_value(_field(attributes, "namespace"))
+        name = _stack_attribute_value(_field(attributes, "name"))
+        if len(parts) == 4 and parts[0] == "n" and parts[2] == "b":
+            namespace = namespace or parts[1]
+            name = name or parts[3]
+        name = _stack_attribute_value(_field(resource, "resource-name")) or name
+        if not isinstance(name, str) or not name:
+            continue
+        candidate = {"name": name}
+        if isinstance(namespace, str) and namespace:
+            candidate["namespace"] = namespace
+        candidates.append(candidate)
+
+    return next(
+        (candidate for candidate in candidates if candidate["name"] == "ocm_replication"),
+        candidates[0] if candidates else None,
+    )
 
 
 def _get_bucket(
@@ -1299,6 +1391,9 @@ def _evaluate_storage(
     bucket_name: str | None,
     bucket: dict[str, Any] | None,
     migration_compartment_id: str,
+    *,
+    namespace: str | None = None,
+    configuration_source: str | None = None,
 ) -> dict[str, Any]:
     if scenario == "VMware to OLVM":
         return _bar(
@@ -1324,6 +1419,10 @@ def _evaluate_storage(
         "bucket_compartment_id": _field(bucket or {}, "compartment-id"),
         "expected_compartment_id": migration_compartment_id,
     }
+    if namespace:
+        evidence["object_storage_namespace"] = namespace
+    if configuration_source:
+        evidence["configured_bucket_source"] = configuration_source
     if not bucket:
         return _bar(
             5,
@@ -1390,6 +1489,7 @@ def _verify_prerequisites(
     scenario: str,
     primary: dict[str, Any] | None,
     explicit_bucket_name: str | None = None,
+    explicit_object_storage_namespace: str | None = None,
 ) -> dict[str, Any]:
     _preflight_root(context, tenancy_ocid, root_compartment_ocid)
     bars: list[dict[str, Any]] = []
@@ -1474,11 +1574,34 @@ def _verify_prerequisites(
         bars.append(_blocked_bar(5, "Storage", "Bar 2"))
     else:
         bucket_name = explicit_bucket_name or (primary or {}).get("replication_bucket_name")
+        namespace = explicit_object_storage_namespace
+        bucket_source = "explicit" if explicit_bucket_name else None
+        if not explicit_bucket_name and (primary or {}).get("replication_bucket_name"):
+            bucket_source = "stack_variable"
+
+        stack_bucket = None
+        stack_id = (primary or {}).get("stack_id")
+        if stack_id and (not bucket_name or not namespace):
+            try:
+                stack_bucket = _find_stack_replication_bucket(
+                    _list_stack_associated_resources(context, stack_id)
+                )
+            except RuntimeError:
+                stack_bucket = None
+            if not bucket_name and stack_bucket:
+                bucket_name = stack_bucket["name"]
+                bucket_source = "stack_associated_resource"
+            if (
+                not namespace
+                and stack_bucket
+                and (not explicit_bucket_name or stack_bucket["name"] == bucket_name)
+            ):
+                namespace = stack_bucket.get("namespace")
         if not bucket_name:
             bars.append(_evaluate_storage(scenario, None, None, migration_id))
         else:
             try:
-                namespace = _get_object_storage_namespace(context)
+                namespace = namespace or _get_object_storage_namespace(context)
                 buckets = _list_buckets(context, namespace, migration_id)
                 bucket = next(
                     (item for item in buckets if _field(item, "name") == bucket_name),
@@ -1493,7 +1616,14 @@ def _verify_prerequisites(
                         # obscure existence elsewhere as NotAuthorizedOrNotFound.
                         bucket = None
                 bars.append(
-                    _evaluate_storage(scenario, bucket_name, bucket, migration_id)
+                    _evaluate_storage(
+                        scenario,
+                        bucket_name,
+                        bucket,
+                        migration_id,
+                        namespace=namespace,
+                        configuration_source=bucket_source,
+                    )
                 )
             except RuntimeError as error:
                 bars.append(
@@ -1752,6 +1882,7 @@ def main() -> int:
             args.scenario,
             primary,
             getattr(args, "replication_bucket_name", None),
+            getattr(args, "object_storage_namespace", None),
         )
 
     if args.json:

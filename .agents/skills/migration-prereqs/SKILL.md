@@ -59,7 +59,7 @@ Do not turn stack behavior or OCM policy into a product requirement. Live resour
 - Use OCI CLI as the portable baseline. Build one global prefix and use it for every call: `oci --profile <profile> --config-file <config-file> [--auth <auth>] [--region <region>] [--cert-bundle <path>]`.
 - Prove access with a real read before evaluating bars. For a tenancy-root target, call `iam tenancy get --tenancy-id <root-ocid>`; for a compartment target, call `iam compartment get --compartment-id <root-ocid>`.
 - Stop and report the exact failed operation when the preflight fails. A command catalog or method-list response does not prove authentication or authorization.
-- Run `scripts/find_primary_prereq_stack.py --verify --scenario <scenario> --root-compartment-ocid <ocid> --json` with OCI CLI in every transport mode. Add `--stack-compartment-ocid <ocid>` for each known RMS stack location and `--replication-bucket-name <name>` when no readable stack supplies the configured name.
+- Run `scripts/find_primary_prereq_stack.py --verify --scenario <scenario> --root-compartment-ocid <ocid> --json` with OCI CLI in every transport mode. Add `--stack-compartment-ocid <ocid>` for each known RMS stack location, `--replication-bucket-name <name>` when no readable stack supplies the configured name, and `--object-storage-namespace <namespace>` when delegated access requires the customer namespace.
 - Treat `verification.decision` as the readiness verdict. Explain its evidence and next action; never upgrade `not_ready` or `unknown` to `ready`.
 - Use OCI MCP tooling only for follow-up diagnostics or corroboration. Neither an API invocation nor method discovery replaces the verifier or changes its verdict.
 

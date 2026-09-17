@@ -919,6 +919,179 @@ class DetectorTests(unittest.TestCase):
         self.assertNotIn("discovery", roles)
         self.assertEqual(invalid["discovery"], "missing_or_wrong_matching_rule")
 
+    def test_list_dynamic_groups_hydrates_rules_omitted_from_list_response(self):
+        context = DETECTOR.OciCliContext("SESSION", "/config")
+        listed = [
+            {
+                "id": "migration-id",
+                "name": "migration",
+                "lifecycle-state": "ACTIVE",
+                "matching-rule": None,
+            },
+            {
+                "id": "discovery-id",
+                "name": "discovery",
+                "lifecycle-state": "ACTIVE",
+                "matching-rule": "stale list value",
+            },
+        ]
+        details = {
+            "migration-id": {
+                "matching-rule": "ALL { resource.type = 'ocmmigration' }"
+            },
+            "discovery-id": {
+                "matching-rule": "Any { resource.type = 'ocbassetsource' }"
+            },
+        }
+
+        def fake_oci(_context, args, **_kwargs):
+            if args[:3] == ["iam", "dynamic-group", "list"]:
+                return listed
+            return details[args[-1]]
+
+        with mock.patch.object(DETECTOR, "_oci", side_effect=fake_oci) as oci:
+            result = DETECTOR._list_dynamic_groups(context, "tenancy")
+
+        self.assertEqual(
+            [group["matching-rule"] for group in result],
+            [
+                "ALL { resource.type = 'ocmmigration' }",
+                "Any { resource.type = 'ocbassetsource' }",
+            ],
+        )
+        self.assertEqual(oci.call_count, 3)
+
+    def test_stack_associated_bucket_includes_customer_namespace(self):
+        resource = {
+            "resource-type": "oci_objectstorage_bucket",
+            "resource-id": "n/customer-namespace/b/ocm_replication",
+            "resource-name": "ocm_replication",
+        }
+        with mock.patch.object(
+            DETECTOR,
+            "_oci",
+            return_value={"items": [resource]},
+        ):
+            resources = DETECTOR._list_stack_associated_resources(
+                DETECTOR.OciCliContext("SESSION", "/config"), "stack"
+            )
+
+        self.assertEqual(
+            DETECTOR._find_stack_replication_bucket(resources),
+            {
+                "name": "ocm_replication",
+                "namespace": "customer-namespace",
+            },
+        )
+
+    def test_verification_uses_explicit_customer_object_storage_namespace(self):
+        bucket = {"name": "replication", "compartment-id": "migration"}
+        with (
+            mock.patch.object(DETECTOR, "_preflight_root"),
+            mock.patch.object(DETECTOR, "_list_tag_namespaces", return_value=[]),
+            mock.patch.object(
+                DETECTOR,
+                "_list_child_compartments",
+                return_value=[
+                    {
+                        "id": "migration",
+                        "name": "Migration",
+                        "lifecycle-state": "ACTIVE",
+                        "defined-tags": {
+                            "CloudMigrations": {
+                                "PrerequisiteResourceLevel": "compartment"
+                            }
+                        },
+                    }
+                ],
+            ),
+            mock.patch.object(DETECTOR, "_list_dynamic_groups", return_value=[]),
+            mock.patch.object(DETECTOR, "_list_policies", return_value=[]),
+            mock.patch.object(
+                DETECTOR,
+                "_evaluate_authorization",
+                return_value=DETECTOR._bar(3, "Service Authorization", "green", [], {}, "None."),
+            ),
+            mock.patch.object(DETECTOR, "_list_vaults", return_value=[]),
+            mock.patch.object(DETECTOR, "_get_object_storage_namespace") as get_namespace,
+            mock.patch.object(DETECTOR, "_list_buckets", return_value=[bucket]) as list_buckets,
+        ):
+            result = DETECTOR._verify_prerequisites(
+                DETECTOR.OciCliContext("SESSION", "/config"),
+                "tenancy",
+                "root",
+                "AWS to OCI",
+                {"replication_bucket_name": "replication"},
+                explicit_object_storage_namespace="customer-namespace",
+            )
+
+        self.assertEqual(result["bars"][3]["status"], "blocked")
+        self.assertEqual(result["bars"][4]["status"], "green")
+        get_namespace.assert_not_called()
+        list_buckets.assert_called_once_with(
+            mock.ANY,
+            "customer-namespace",
+            "migration",
+        )
+
+    def test_verification_uses_stack_bucket_and_namespace_when_variable_is_missing(self):
+        resource = {
+            "resource-type": "oci_objectstorage_bucket",
+            "resource-id": "n/customer-namespace/b/ocm_replication",
+            "resource-name": "ocm_replication",
+        }
+        bucket = {"name": "ocm_replication", "compartment-id": "migration"}
+        with (
+            mock.patch.object(DETECTOR, "_preflight_root"),
+            mock.patch.object(DETECTOR, "_list_tag_namespaces", return_value=[]),
+            mock.patch.object(
+                DETECTOR,
+                "_list_child_compartments",
+                return_value=[
+                    {
+                        "id": "migration",
+                        "name": "Migration",
+                        "lifecycle-state": "ACTIVE",
+                        "defined-tags": {
+                            "CloudMigrations": {
+                                "PrerequisiteResourceLevel": "compartment"
+                            }
+                        },
+                    }
+                ],
+            ),
+            mock.patch.object(DETECTOR, "_list_dynamic_groups", return_value=[]),
+            mock.patch.object(DETECTOR, "_list_policies", return_value=[]),
+            mock.patch.object(
+                DETECTOR,
+                "_evaluate_authorization",
+                return_value=DETECTOR._bar(3, "Service Authorization", "green", [], {}, "None."),
+            ),
+            mock.patch.object(DETECTOR, "_list_vaults", return_value=[]),
+            mock.patch.object(DETECTOR, "_list_stack_associated_resources", return_value=[resource]),
+            mock.patch.object(DETECTOR, "_get_object_storage_namespace") as get_namespace,
+            mock.patch.object(DETECTOR, "_list_buckets", return_value=[bucket]) as list_buckets,
+        ):
+            result = DETECTOR._verify_prerequisites(
+                DETECTOR.OciCliContext("SESSION", "/config"),
+                "tenancy",
+                "root",
+                "AWS to OCI",
+                {"stack_id": "stack", "replication_bucket_name": None},
+            )
+
+        self.assertEqual(result["bars"][4]["status"], "green")
+        self.assertEqual(
+            result["bars"][4]["evidence"]["configured_bucket_source"],
+            "stack_associated_resource",
+        )
+        get_namespace.assert_not_called()
+        list_buckets.assert_called_once_with(
+            mock.ANY,
+            "customer-namespace",
+            "migration",
+        )
+
     def test_v24_authorization_requirements_are_scenario_specific(self):
         aws_tenancy, aws_root = DETECTOR._authorization_policy_requirements(
             "AWS to OCI", "migration", "secrets"
@@ -1080,6 +1253,8 @@ class DetectorTests(unittest.TestCase):
             "AWS to OCI",
             "--replication-bucket-name",
             "replication",
+            "--object-storage-namespace",
+            "customer-namespace",
             "--json",
         ]
 
@@ -1099,6 +1274,7 @@ class DetectorTests(unittest.TestCase):
         self.assertTrue(args.verify)
         self.assertEqual(args.scenario, "AWS to OCI")
         self.assertEqual(args.replication_bucket_name, "replication")
+        self.assertEqual(args.object_storage_namespace, "customer-namespace")
         self.assertTrue(args.json)
 
     def test_load_tenancy_from_config_selects_the_requested_profile(self):
@@ -1161,11 +1337,12 @@ class DetectorTests(unittest.TestCase):
             DETECTOR._list_policies(context, "root")
             DETECTOR._list_vaults(context, "secrets")
             DETECTOR._list_keys(context, "secrets", "https://kms.example")
+            DETECTOR._list_stack_associated_resources(context, "stack")
             self.assertEqual(DETECTOR._get_object_storage_namespace(context), "namespace")
             DETECTOR._get_bucket(context, "namespace", "replication")
             DETECTOR._list_buckets(context, "namespace", "migration")
 
-        self.assertEqual(oci.call_count, 16)
+        self.assertEqual(oci.call_count, 17)
         self.assertEqual(
             oci.call_args_list[0],
             mock.call(
@@ -1221,6 +1398,21 @@ class DetectorTests(unittest.TestCase):
                 ],
                 allow_empty=True,
             ),
+        )
+        self.assertIn(
+            mock.call(
+                context,
+                [
+                    "resource-manager",
+                    "associated-resource-summary",
+                    "list-stack-associated-resources",
+                    "--stack-id",
+                    "stack",
+                    "--all",
+                ],
+                allow_empty=True,
+            ),
+            oci.call_args_list,
         )
 
     def test_identity_evaluation_distinguishes_missing_unavailable_and_stale(self):
@@ -1789,6 +1981,7 @@ class DetectorTests(unittest.TestCase):
             verify=True,
             scenario="AWS to OCI",
             replication_bucket_name="replication",
+            object_storage_namespace=None,
             json=True,
         )
         verification = {"decision": "ready", "authoritative": True, "bars": []}
@@ -1820,6 +2013,7 @@ class DetectorTests(unittest.TestCase):
             "AWS to OCI",
             None,
             "replication",
+            None,
         )
 
     def test_main_rejects_invalid_verification_arguments_before_oci_reads(self):
@@ -1837,6 +2031,7 @@ class DetectorTests(unittest.TestCase):
             "verify": True,
             "scenario": "AWS to OCI",
             "replication_bucket_name": None,
+            "object_storage_namespace": None,
             "json": True,
         }
         invalid = [

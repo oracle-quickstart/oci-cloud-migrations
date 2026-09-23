@@ -658,6 +658,16 @@ class DetectorTests(unittest.TestCase):
         migration_id = "migration-compartment"
         secrets_id = "secrets-compartment"
         groups = [
+            # Regression: list order must not select this unrelated matching rule.
+            {
+                "id": "unrelated-migration-group",
+                "name": "lg001-dynamic-group",
+                "lifecycle-state": "ACTIVE",
+                "matching-rule": (
+                    "ALL { resource.type = 'ocmmigration', "
+                    f"resource.compartment.id = '{migration_id}' }}"
+                ),
+            },
             {
                 "id": "migration-group",
                 "name": "central-migration-principal",
@@ -866,7 +876,7 @@ class DetectorTests(unittest.TestCase):
         self.assertEqual(inactive_result["status"], "yellow")
 
     def test_dynamic_group_matching_does_not_accept_prefix_values(self):
-        roles, invalid = DETECTOR._find_dynamic_group_roles(
+        roles, invalid = DETECTOR._find_dynamic_group_candidates(
             [
                 {
                     "name": "wrong-migration",
@@ -884,7 +894,7 @@ class DetectorTests(unittest.TestCase):
         self.assertEqual(invalid["migration"], "missing_or_wrong_matching_rule")
 
     def test_dynamic_group_matching_rejects_overbroad_any_rule(self):
-        roles, invalid = DETECTOR._find_dynamic_group_roles(
+        roles, invalid = DETECTOR._find_dynamic_group_candidates(
             [
                 {
                     "name": "overbroad-migration",
@@ -902,7 +912,7 @@ class DetectorTests(unittest.TestCase):
         self.assertEqual(invalid["migration"], "missing_or_wrong_matching_rule")
 
     def test_dynamic_group_matching_rejects_extra_any_clause(self):
-        roles, invalid = DETECTOR._find_dynamic_group_roles(
+        roles, invalid = DETECTOR._find_dynamic_group_candidates(
             [
                 {
                     "name": "overbroad-discovery",

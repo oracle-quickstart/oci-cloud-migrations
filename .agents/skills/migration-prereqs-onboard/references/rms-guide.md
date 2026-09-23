@@ -37,6 +37,8 @@ Use this reference only from the mutation-gated onboarding workflow.
 
 Read `version-compatibility.md` before configuring a stack. The current source has no KMS toggle. It creates `ocm-secrets` and `ocm-key` when `MigrationSecrets` is available. A customer who declines KMS does not satisfy Bar 4.
 
+`CloudMigrations.PrerequisiteVersion` is release-owned output on stack-created resources, not a stack variable. Never set or increment it in the source or variables. If an update plan changes the observed version unexpectedly, stop and report the mismatch before APPLY.
+
 ## Fresh stack preparation
 
 Before `create_stack`, use the onboarding workflow's stack-preparation `MUTATION` gate. After the stack is created, use a separate PLAN `MUTATION` gate immediately before creating the PLAN job.

@@ -982,10 +982,10 @@ def _matching_rule_matches(
     return sorted(parsed) == sorted(normalized_expected)
 
 
-def _find_dynamic_group_roles(
+def _find_dynamic_group_candidates(
     dynamic_groups: list[dict[str, Any]], migration_compartment_id: str
-) -> tuple[dict[str, dict[str, Any]], dict[str, str]]:
-    roles: dict[str, dict[str, Any]] = {}
+) -> tuple[dict[str, list[dict[str, Any]]], dict[str, str]]:
+    roles: dict[str, list[dict[str, Any]]] = {}
     invalid: dict[str, str] = {}
     expected: dict[str, tuple[str, tuple[tuple[str, str], ...]]] = {
         "migration": (
@@ -1018,10 +1018,11 @@ def _find_dynamic_group_roles(
                 equalities,
             )
         ]
-        active = next(
-            (item for item in candidates if _field(item, "lifecycle-state") == "ACTIVE"),
-            None,
-        )
+        active = [
+            item
+            for item in candidates
+            if _field(item, "lifecycle-state") == "ACTIVE"
+        ]
         if active:
             roles[role] = active
         elif candidates:
@@ -1261,7 +1262,9 @@ def _evaluate_authorization(
         for item in root_policies
         if _field(item, "lifecycle-state") == "ACTIVE"
     ]
-    roles, invalid = _find_dynamic_group_roles(dynamic_groups, migration_compartment_id)
+    role_candidates, invalid = _find_dynamic_group_candidates(
+        dynamic_groups, migration_compartment_id
+    )
     required_roles = {"migration", "discovery"}
     if scenario.startswith("VMware"):
         required_roles.add("remote_agent")
@@ -1269,7 +1272,9 @@ def _evaluate_authorization(
         required_roles.add("hydration_agent")
 
     invalid_required = {
-        role: invalid[role] for role in sorted(required_roles) if role not in roles
+        role: invalid[role]
+        for role in sorted(required_roles)
+        if role not in role_candidates
     }
     if invalid_required:
         return _bar(
@@ -1291,14 +1296,28 @@ def _evaluate_authorization(
     missing: dict[str, dict[str, list[str]]] = {}
     group_evidence: dict[str, dict[str, Any]] = {}
     for role in sorted(required_roles):
-        group = roles[role]
+        evaluated = []
+        for group in role_candidates[role]:
+            group_name = _field(group, "name")
+            tenancy_missing = _policy_missing_requirements(
+                tenancy_policies, group_name, tenancy_requirements[role]
+            )
+            compartment_missing = _policy_missing_requirements(
+                root_policies, group_name, compartment_requirements[role]
+            )
+            evaluated.append(
+                (
+                    len(tenancy_missing) + len(compartment_missing),
+                    str(group_name or "").lower(),
+                    group,
+                    tenancy_missing,
+                    compartment_missing,
+                )
+            )
+        _, _, group, tenancy_missing, compartment_missing = min(
+            evaluated, key=lambda item: (item[0], item[1])
+        )
         group_name = _field(group, "name")
-        tenancy_missing = _policy_missing_requirements(
-            tenancy_policies, group_name, tenancy_requirements[role]
-        )
-        compartment_missing = _policy_missing_requirements(
-            root_policies, group_name, compartment_requirements[role]
-        )
         if tenancy_missing or compartment_missing:
             missing[role] = {
                 "tenancy": tenancy_missing,

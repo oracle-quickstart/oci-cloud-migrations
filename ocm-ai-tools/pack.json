@@ -1,0 +1,25 @@
+{
+  "schema_version": 2,
+  "name": "ocm-ai-tools",
+  "version": "0.2.0",
+  "root": ".",
+  "rules": [
+    "ocm-prereqs"
+  ],
+  "skills": [
+    "migration-prereqs"
+  ],
+  "workflows": [
+    "migration-prereqs-validate",
+    "migration-prereqs-onboard"
+  ],
+  "prompts": [
+    "prereq-readiness-check"
+  ],
+  "profiles": [
+    "ocm-ai-tools"
+  ],
+  "mcp": [
+    "oci-mcp"
+  ]
+}

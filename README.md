@@ -1,6 +1,17 @@
 # Overview
 This repository contains resources related to the [Oracle Cloud Migrations](https://docs.oracle.com/en-us/iaas/Content/cloud-migration/home.htm) service.
 
+## How to use the OCM AI tools
+
+With OCI CLI access configured for your tenancy:
+
+1. [Install all three skills](#oci-cloud-migrations-ai-tools).
+2. Open Codex.
+3. Paste: `Assess OCM prerequisite readiness for <scenario>; root compartment: <OCID>.`
+   Replace `<scenario>` with `VMware to OCI`, `AWS to OCI`, or `VMware to OLVM`, and `<OCID>` with your migration root compartment OCID.
+4. If the result is `not ready` or `unknown`, review the bar-by-bar evidence and next action.
+5. If remediation is needed, ask for a proposal, review it, and explicitly approve each Resource Manager action before it runs.
+
 # Included Resources
 
 - [Prerequisites](Prerequisites) - A copy of the Terraform that is provided via the [Oracle Cloud Migrations Overview](https://cloud.oracle.com/cloud-migrations) page of the Oracle Cloud Console.
